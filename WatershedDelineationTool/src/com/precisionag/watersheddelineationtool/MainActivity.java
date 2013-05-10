@@ -3,77 +3,185 @@ package com.precisionag.watersheddelineationtool;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.GroundOverlay;
+import com.google.android.gms.maps.model.LatLng;
+import com.precisionag.watersheddelineationtool.CustomMarker;
 import com.precisionag.watersheddelineationtool.R;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.res.AssetManager;
+import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements OnMapClickListener {
 	GroundOverlay prevoverlay;
 	LocationManager locationManager;
+	private Menu myMenu = null;
+	RasterLayer raster;
 	
-
+	//marker variables
+	int markerMode;
+	List<CustomMarker> markers;
+	private static final int ADD_MODE = 1;
+	private static final int REMOVE_MODE = 2;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-//		Bitmap elevation = BitmapFactory.decodeResource(getResources(), R.drawable.home128);
 		MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
 		GoogleMap map = mapFragment.getMap();
 		map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
 		map.setMyLocationEnabled(true);
+		map.setOnMapClickListener(this);
+
 		UiSettings uiSettings = map.getUiSettings();
 		uiSettings.setRotateGesturesEnabled(false);
 		uiSettings.setTiltGesturesEnabled(false);
 		uiSettings.setZoomControlsEnabled(false);
+		markers = new ArrayList<CustomMarker>();
+		markerMode = 0;
 		double[][] DEM = readDEMFile("DEM");
-		double[][] flowDirection = computeFlowDirection(DEM, drainage, intensity);
-		double[][] flowAccumulation = computeFlowAccumulation(flowDirection);
+		RasterLayer DEMRaster = new RasterLayer(DEM, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0));
+		int numrows = DEM.length;
+		int numcols = DEM[0].length;
+		double[][] drainage = new double[numrows][numcols];
+		RasterLayer drainageRaster = new RasterLayer(drainage, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0));
+		CustomMarker.setRaster(drainageRaster);
+		CustomMarker.setActivity(this);
+		CustomMarker.setMap(map);
+		prevoverlay = drainageRaster.createOverlay(map);
+		configSeekbar();
+		
+		//DO THIS ON SOME SORT OF CLICK OF A "COMPUTE WATERSHED" BUTTON
+//		double[][] flowDirection = computeFlowDirection(DEM, drainage, rainfallIntensity);
+//		Integer[][] flowAccumulation = computeFlowAccumulation(flowDirection);
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
+		myMenu = menu;
+		// Make an action bar and don't display the app title
+		ActionBar actionBar = getActionBar();
+		getActionBar().setDisplayShowTitleEnabled(false);
+		getActionBar().setDisplayShowHomeEnabled(false);
 		return true;
 	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle Markerss	
+		if (item.getItemId() == R.id.menu_add) {
+			markerMode = ADD_MODE;
+			return true;
+		}
+		else if (item.getItemId() == R.id.menu_remove) {
+			markerMode = REMOVE_MODE;
+			return true;
+		}
+		else {
+			return super.onOptionsItemSelected(item);
+		}
+	}
 
+	public void onMapClick (LatLng point) {
+		switch(markerMode) {
+		case ADD_MODE:
+			CustomMarker.getPixelCoords(point);
+			markers.add(new CustomMarker(point));
+			markerMode = 0;
+			break;
+		case REMOVE_MODE:
+			Iterator<CustomMarker> i = markers.iterator();
+			CustomMarker marker;
+
+			while (i.hasNext()) {
+				marker = i.next();
+				if (marker.inBounds(point)) {
+					marker.removeMarker();
+					i.remove();
+				}
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	
+	private void configSeekbar() {
+		SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar);
+		seekBar.setMax(10);
+		seekBar.setProgress(0);
+		seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				//get level from seekbar
+				int rainfallSeekbarProgress = seekBar.getProgress();
+
+				//update text block
+				double rainfallAmount = ((double)rainfallSeekbarProgress);
+				Log.w("TAG", Double.toString(rainfallAmount));
+				TextView waterElevationTextView = (TextView) findViewById(R.id.text2);
+				String rainfall = new DecimalFormat("#.#").format(rainfallAmount);
+				String waterElevationText = "Rainfall Event: 24-hour, " + rainfall + "inches";
+				waterElevationTextView.setText(waterElevationText);
+			}
+
+			@Override
+			public void onStartTrackingTouch(SeekBar arg0) {
+				
+			}
+
+			@Override
+			public void onStopTrackingTouch(SeekBar arg0) {
+				
+			}
+		});
+	}
+			
 	private double[][] readDEMFile(String DEMName) {
 		AssetManager assetManager = getAssets();
+		double[][] DEM = null;
 		try {
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(assetManager.open(DEMName + ".asc")));
 			String line = bufferedReader.readLine();
 			String[] lineArray = line.split("\\s+");
-			int numrows = Integer.parseInt(line);
+			int numrows = Integer.parseInt(lineArray[1]);
 			line = bufferedReader.readLine();
 			lineArray = line.split("\\s+");
-			int numcols = Integer.parseInt(line);
+			int numcols = Integer.parseInt(lineArray[1]);
 			line = bufferedReader.readLine();
 			lineArray = line.split("\\s+");
-			double xLLCorner = Double.parseDouble(line);
+			double xLLCorner = Double.parseDouble(lineArray[1]);
 			line = bufferedReader.readLine();
 			lineArray = line.split("\\s+");
-			double yLLCorner = Double.parseDouble(line);
+			double yLLCorner = Double.parseDouble(lineArray[1]);
 			line = bufferedReader.readLine();
 			lineArray = line.split("\\s+");
-			double cellSize = Double.parseDouble(line);
+			double cellSize = Double.parseDouble(lineArray[1]);
 			line = bufferedReader.readLine();
 			lineArray = line.split("\\s+");
-			double NaNValue = Double.parseDouble(line);
+			double NaNValue = Double.parseDouble(lineArray[1]);
 			
-			double[][] DEM = new double[numrows][numcols]; 
+			DEM = new double[numrows][numcols]; 
 			int r = 0;
 			while (( line = bufferedReader.readLine()) != null){
 				lineArray = line.split("\\s+");
@@ -82,12 +190,16 @@ public class MainActivity extends Activity {
 				}
 			r++;
 			}
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		} finally {}
 		return DEM;
 	}
 	
 	// Flow Direction
-	public double[][] computeFlowDirection(double[][] DEM, double[][] drainage, double intensity) {
+	public double[][] computeFlowDirection(double[][] DEM, double[][] drainage, double rainfallIntensity) {
 		int numrows = DEM.length;
 		int numcols = DEM[0].length;
 		double[][] flowDirection = new double[numrows][numcols];
@@ -102,7 +214,7 @@ public class MainActivity extends Activity {
 					continue;
 				}
 				
-				if (drainage[r][c] >= intensity) {
+				if (drainage[r][c] >= rainfallIntensity) {
 					flowDirection[r][c] = -2;
 					continue;
 				}
@@ -178,7 +290,7 @@ public class MainActivity extends Activity {
 	}
 	
 	// Original Pit Definition
-	public int[][] computePits(double[][] DEM, double[][] drainage, double[][] flowDirection, int cellSize, double Intensity) {
+	public int[][] computePits(double[][] DEM, double[][] drainage, double[][] flowDirection, int cellSize, double rainfallIntensity) {
 		int numrows = flowDirection.length;
 		int numcols = flowDirection[0].length;
 		int[][] pits = new int[numrows][numcols];
@@ -206,7 +318,7 @@ public class MainActivity extends Activity {
 		}
 		pitIDCounter = 1;
 		for (int pitIdx = 0; pitIdx < pitIndicesList.size(); pitIdx++) {
-			Pit currentPit = new Pit(drainage, cellSize, DEM, flowDirection, pits, pitIndicesList.get(pitIdx), pitIDCounter);
+			Pit currentPit = new Pit(drainage, cellSize, DEM, flowDirection, pits, pitIndicesList.get(pitIdx), pitIDCounter, rainfallIntensity);
 			pitDataList.add(currentPit);
 		}
 		return pits;

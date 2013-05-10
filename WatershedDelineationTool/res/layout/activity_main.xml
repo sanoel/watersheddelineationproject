@@ -1,16 +1,32 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
     tools:context=".MainActivity" >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
+	<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+      		  xmlns:map="http://schemas.android.com/apk/res-auto"
+	  		  android:id="@+id/map" 
+	  		  android:layout_width="match_parent"
+	  		  android:layout_height="wrap_content"
+	  		  android:layout_weight="5"
+			  class="com.google.android.gms.maps.MapFragment"
+	  		  map:cameraTargetLat="40.9749879577"
+		      map:cameraTargetLng="-86.1991258479" 
+      		  map:cameraZoom="14"/>
+    
+    <TextView android:id="@+id/text2"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="Rainfall Event: 24-hour, 0.0 inches" />
 
-</RelativeLayout>
+
+	<SeekBar  android:id="@+id/seekBar"
+        	  android:layout_width="match_parent"
+        	  android:layout_height="40dp"
+        	  android:layout_weight="1"
+        	  android:layout_alignParentBottom="true"
+        	  android:layout_alignParentLeft="true" />
+
+</LinearLayout>
