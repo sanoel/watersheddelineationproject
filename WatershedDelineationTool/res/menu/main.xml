@@ -13,6 +13,22 @@
     <item android:id="@+id/menu_remove"
           android:icon="@drawable/content_remove"
           android:title="Remove Marker"
-          android:showAsAction="always" /> 
+          android:showAsAction="always" />
+    
+    <item android:id="@+id/menu_place_drainage_tile"
+          android:icon="@drawable/av_download"
+          android:title="Edit Drainage Tiles"
+          android:showAsAction="always" />
+    
+    <item android:id="@+id/menu_layers"
+          android:icon="@drawable/av_add_to_queue"
+          android:title="Map Layers"
+          android:showAsAction="always" />
+    
+    <item android:id="@+id/menu_draw_delineation_vertices"
+          android:icon="@drawable/content_edit"
+          android:title="Draw Vertices"
+          android:showAsAction="always" />
+    
 
 </menu>

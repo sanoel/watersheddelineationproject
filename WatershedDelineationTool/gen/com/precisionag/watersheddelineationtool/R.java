@@ -139,22 +139,30 @@ containing a value of this type.
         public static final int activity_vertical_margin=0x7f060001;
     }
     public static final class drawable {
-        public static final int box=0x7f020000;
-        public static final int content_new=0x7f020001;
-        public static final int content_remove=0x7f020002;
-        public static final int ic_launcher=0x7f020003;
-        public static final int tile_riser=0x7f020004;
+        public static final int av_add_to_queue=0x7f020000;
+        public static final int av_download=0x7f020001;
+        public static final int av_upload=0x7f020002;
+        public static final int box=0x7f020003;
+        public static final int content_edit=0x7f020004;
+        public static final int content_new=0x7f020005;
+        public static final int content_remove=0x7f020006;
+        public static final int ic_launcher=0x7f020007;
+        public static final int tile_riser=0x7f020008;
     }
     public static final class id {
+        public static final int button_delineate=0x7f040007;
         public static final int hybrid=0x7f040004;
         public static final int map=0x7f040005;
-        public static final int menu_add=0x7f040009;
-        public static final int menu_remove=0x7f04000a;
-        public static final int menu_settings=0x7f040008;
+        public static final int menu_add=0x7f04000a;
+        public static final int menu_draw_delineation_vertices=0x7f04000e;
+        public static final int menu_layers=0x7f04000d;
+        public static final int menu_place_drainage_tile=0x7f04000c;
+        public static final int menu_remove=0x7f04000b;
+        public static final int menu_settings=0x7f040009;
         public static final int none=0x7f040000;
         public static final int normal=0x7f040001;
         public static final int satellite=0x7f040002;
-        public static final int seekBar=0x7f040007;
+        public static final int seekBar=0x7f040008;
         public static final int terrain=0x7f040003;
         public static final int text2=0x7f040006;
     }
@@ -175,6 +183,7 @@ containing a value of this type.
         /**   Requested by string saying which app requested the notification. [CHAR LIMIT=42] 
          */
         public static final int auth_client_requested_by_msg=0x7f050010;
+        public static final int button_text=0x7f050014;
         /**  Button in confirmation dialog to enable Google Play services.  Clicking it
         will direct user to application settings of Google Play services where they
         can enable it [CHAR LIMIT=40] 

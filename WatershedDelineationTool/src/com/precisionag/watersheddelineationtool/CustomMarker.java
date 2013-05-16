@@ -36,7 +36,7 @@ public class CustomMarker {
 			String elevation = new DecimalFormat("#.#").format(pixelValue);
 			title = "Elevation: " + elevation + "m";
 		}
-		Bitmap markerBitmap = BitmapFactory.decodeResource(activity.getResources(), R.drawable.box);			
+		Bitmap markerBitmap = BitmapFactory.decodeResource(activity.getResources(), R.drawable.tile_riser);			
 		markerBitmap = markerBitmap.copy(markerBitmap.getConfig(), true);
 		Canvas c = new Canvas(markerBitmap);
 		Paint paint = new Paint();

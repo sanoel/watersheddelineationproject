@@ -20,7 +20,12 @@
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:text="Rainfall Event: 24-hour, 0.0 inches" />
-
+    
+	<Button   android:id="@+id/button_delineate"
+	          android:layout_width="wrap_content"
+	    	  android:layout_height="wrap_content"
+	    	  android:text="@string/button_text" 
+	    	  android:onClick="delineate" />
 
 	<SeekBar  android:id="@+id/seekBar"
         	  android:layout_width="match_parent"

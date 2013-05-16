@@ -57,7 +57,6 @@ public class RasterLayer {
 	
 	//creates an overlay view of the field on the specified map object
 	public GroundOverlay createOverlay(GoogleMap map) {
-		Log.w("TAG","1c");
 		if(map == null){
 			Log.e("createOverlay", "Null map");
 		}
