@@ -10,14 +10,6 @@ import android.util.Log;
 import android.util.Pair;
 
 public class Pit {
-
-	double[][] DEM;
-	FlowDirectionCell[][] flowDirection;
-	double[][] drainage;
-	int[][] pits;
-	int cellSize;
-	double rainfallIntensity;
-
 	// single pit cell variables
 	int pitID;
 	double pitBottomElevation;
@@ -44,16 +36,16 @@ public class Pit {
 
 
 
-	// constructor method
+	// Constructor method
 	@SuppressWarnings("static-access")
 	public Pit(double[][] inputDrainage, int inputCellSize, double[][] inputDEM, FlowDirectionCell[][] inputFlowDirection, int[][] inputPits, Point pitPoint, int inputPitID, double inputRainfallIntensity) {
 
-		cellSize = inputCellSize;
-		rainfallIntensity = inputRainfallIntensity;
-		DEM = inputDEM;
-		flowDirection = inputFlowDirection;
-		pits = inputPits;
-		drainage = inputDrainage;
+		double cellSize = inputCellSize;
+		double rainfallIntensity = inputRainfallIntensity;
+		double[][] DEM = inputDEM;
+		FlowDirectionCell[][] flowDirection = inputFlowDirection;
+		int[][] pits = inputPits;
+		double[][]drainage = inputDrainage;
 		int rowSize = DEM[0].length;
 		int columnSize = DEM.length;
 		allPitPointsList = new ArrayList<Point>();
@@ -119,7 +111,7 @@ public class Pit {
 		filledVolume = 0;
 		pitDrainageRate = 0;
 		netAccumulationRate = (rainfallIntensity*areaCellCount) - pitDrainageRate;
-		spilloverTime = retentionVolume/((cellSize^2)*netAccumulationRate);
+		spilloverTime = retentionVolume/(Math.pow(cellSize,2)*netAccumulationRate);
 	}
 	
 	public ArrayList<Point> findCellsDrainingToPointNew(FlowDirectionCell[][] flowDirection, ArrayList<Point> indicesDrainingToPit) {
@@ -138,77 +130,6 @@ public class Pit {
 		}
 		return indicesDrainingToPit;
 	}
-
-//	public List<Integer> findCellsDrainingToPoint(int index, int rowSize, int columnSize, FlowDirectionCell[][] flowDirection, List<Pair<Integer, Integer>> indicesDrainingToIndex) {
-//		indicesDrainingToIndex.add(index);
-//		int r = linearToTwoDIndexing(index, rowSize)[0];
-//		int c = linearToTwoDIndexing(index, rowSize)[1];
-//		for (int x = -1; x < 2; x++) {
-//			for (int y = -1; y < 2; y++){
-//				if (x == 0 && y == 0) {
-//					continue;}
-//				if (r+y > rowSize || r+y < 1 || c+x > columnSize || c+x < 1) {
-//					continue;}
-//				double angle = Math.atan2(y,x);
-//				if (flowDirection[r+y][c+x] == angle % 2*Math.PI) {
-//					int neighborIndex = twoDToLinearIndexing(r+y, c+x, rowSize);
-//					indicesDrainingToIndex.addAll(findCellsDrainingToPoint(neighborIndex, rowSize, columnSize, flowDirection, indicesDrainingToIndex));
-//				}
-//			}
-//		}
-//		return indicesDrainingToIndex;
-//	}
-
-//	public List<Integer> findPitBorderData(double[][] DEM, int[][] pits, List<Integer> allPitPointsList, int rowSize, int columnSize) {
-//		List<Integer> pitBorderIndicesList = new ArrayList<Integer>();
-//		pitBorderIndicesList = allPitPointsList;
-//		double spilloverElevation = Double.NaN;
-//		for (int listIdx = 0; listIdx < allPitPointsList.size(); listIdx++) {
-//			int currentCellIndex = allPitPointsList.get(listIdx);
-//			int r = linearToTwoDIndexing(currentCellIndex, rowSize)[0];
-//			int c = linearToTwoDIndexing(currentCellIndex, rowSize)[1];
-//			boolean onBorder = true;
-//			for (int x = -1; x < 2; x++) {
-//				for (int y = -1; y < 2; y++){
-//					if (x == 0 && y == 0) {
-//						continue;}
-//					if (r+y > rowSize || r+y < 1 || c+x > columnSize || c+x < 1) {
-//						continue;}
-//					if (pits[r+y][c+x] != pits[r][c]) {
-//						double currentElevation = DEM[r][c];
-//						double neighborElevation = DEM[r+y][c+x];
-//						onBorder = true;
-//						if (Double.isNaN(spilloverElevation) || (currentElevation <= spilloverElevation && neighborElevation <= spilloverElevation)) {
-//							minOutsidePerimeterElevation = neighborElevation;
-//							minInsidePerimeterElevation = currentElevation;
-//							spilloverElevation = Math.max(neighborElevation, currentElevation);
-//							pitOutletIndex = currentCellIndex;
-//							double angle = Math.atan2(y,x);
-//							outletSpilloverFlowDirection = angle % 2*Math.PI;
-//							spilloverPitID = pits[r+y][c+x];
-//						}
-//					}
-//				}
-//			}
-//			if (onBorder == false) {
-//				pitBorderIndicesList.remove(currentCellIndex);
-//			}
-//		}
-//	}
-//	public int computeCellCountToBeFilled(double cellSize, int rowSize, double[][] DEM, double spilloverElevation, List<Integer> allPitPointsList) {
-//		double retentionVolume = 0;
-//		int cellCountToBeFilled = 0;
-//		for (int listIdx = 0; listIdx < allPitPointsList.size(); listIdx++) {
-//			int currentCellIndex = allPitPointsList.get(listIdx);
-//			int r = linearToTwoDIndexing(currentCellIndex, rowSize)[0];
-//			int c = linearToTwoDIndexing(currentCellIndex, rowSize)[1];
-//			if (DEM[r][c] < spilloverElevation) {
-//				retentionVolume = retentionVolume + ((spilloverElevation - DEM[r][c])*cellSize);
-//				cellCountToBeFilled = cellCountToBeFilled + 1;
-//			}
-//		}
-//		return cellCountToBeFilled;
-//	}
 	
 	public int[] linearToTwoDIndexing(int linearIndex, int numrows) {
 		int[] rowcol = new int[2];

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -68,7 +70,7 @@ public class MainActivity extends Activity implements OnMapClickListener {
 		uiSettings.setZoomControlsEnabled(false);
 		markers = new ArrayList<CustomMarker>();
 		markerMode = 0;
-		final double[][] DEM = readDEMFile("Test");
+		final double[][] DEM = readDEMFile("Test2");
 //		RasterLayer DEMRaster = new RasterLayer(DEM, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0));
 		int numrows = DEM.length;
 		int numcols = DEM[0].length;
@@ -98,26 +100,13 @@ public class MainActivity extends Activity implements OnMapClickListener {
 //			     .transparency(0));
 //				groundOverlay.setVisible(true);
 				int cellSize = 1;
-				Log.w("onclick", "1");
 				PitRaster pits = new PitRaster(DEM, drainage, flowDirection, cellSize, rainfallIntensity);
-				Log.w("onclick", "2");
 				Bitmap pitBitmap = pits.pitsBitmap;
-				Log.w("onclick", "3");
 				GroundOverlayOptions goverlayopts = new GroundOverlayOptions();
-				Log.w("onclick", "4");
-				goverlayopts.image(BitmapDescriptorFactory.fromBitmap(pitBitmap));
-				Log.w("onclick", "5");
-				goverlayopts.positionFromBounds(fieldBounds);
-				Log.w("onclick", "6");
-				goverlayopts.transparency(0);
-				Log.w("onclick", "7");
-				Log.w("onclick", Boolean.toString(map == null));
-				GroundOverlay pitGroundOverlay = map.addGroundOverlay(goverlayopts);
-//						
-//						new GroundOverlayOptions()
-//			     .image(BitmapDescriptorFactory.fromBitmap(pitBitmap))
-//			     .positionFromBounds(fieldBounds)
-//			     .transparency(0));
+				GroundOverlay pitGroundOverlay = map.addGroundOverlay(new GroundOverlayOptions()
+			     .image(BitmapDescriptorFactory.fromBitmap(pitBitmap))
+			     .positionFromBounds(fieldBounds)
+			     .transparency(0));
 				pitGroundOverlay.setVisible(true);
 //				RasterLayer flowAccumulationRaster = new RasterLayer(flowAccumulation, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0));
 			}
@@ -334,53 +323,6 @@ public class MainActivity extends Activity implements OnMapClickListener {
 		}
 		return flowDirection;
 	}
-	
-//	// Flow Direction
-//	public double[][] computeFlowDirection(double[][] DEM, double[][] drainage, double rainfallIntensity) {
-//		int numrows = DEM.length;
-//		int numcols = DEM[0].length;
-//		double[][] flowDirection = new double[numrows][numcols];
-//		
-//		for (int r = 0; r < numrows; r++) {
-//			for (int c = 0; c < numcols; c++) {
-//				// If the drainage rate is greater than the accumulation rate
-//				// then the cell is a pit.
-//				
-//				if (r == numrows-1 || r == 0 || c == numcols-1 || c == 0) {
-//					flowDirection[r][c] = Double.NaN;
-//					continue;
-//				}
-//				
-//				if (drainage[r][c] >= rainfallIntensity) {
-//					flowDirection[r][c] = -2;
-//					continue;
-//				}
-//
-//				double minimumSlope = Double.NaN;
-//				for (int x = -1; x < 2; x++) {
-//					for (int y = -1; y < 2; y++){
-//						if (x == 0 && y == 0) {
-//							continue;}
-//						double distance = Math.pow((Math.pow(x, 2) + Math.pow(y, 2)),0.5);
-//						double slope = (DEM[r+y][c+x] - DEM[r][c])/distance;
-//						double angle = Math.atan2(y,x); 
-//
-//						//maintain current minimum slope, minimum slope being the steepest downslope
-//						if (Double.isNaN(minimumSlope) || slope <= minimumSlope) {
-//							flowDirection[r][c] = angle % 2*Math.PI;
-//						}
-//					}
-//				}
-//				if (minimumSlope == 0) {
-//					flowDirection[r][c] = -4;
-//				}
-//				if (minimumSlope >= 0) {
-//					flowDirection[r][c] = -1;
-//				}
-//			}
-//		}
-//		return flowDirection;
-//	}
 
 	// Flow Accumulation
 	public Integer[][] computeFlowAccumulationNew(FlowDirectionCell[][] flowDirection) {
@@ -435,127 +377,54 @@ public class MainActivity extends Activity implements OnMapClickListener {
 		return flowAccumBitmap;
 	}
 	
-//	// Flow Accumulation
-//	public Integer[][] computeFlowAccumulation(double[][] flowDirection) {
-//		int numrows = flowDirection.length;
-//		int numcols = flowDirection[0].length;
-//		Integer[][] flowAccumulation = new Integer[numrows][numcols];
-//		for (int r = 0; r < numrows; r++){
-//			for (int c = 0; c < numcols; c++){
-//				if (r == numrows-1 || r == 0 || c == numcols-1 || c == 0) {
-//					continue;
-//				}
-//				if (flowAccumulation[r][c] == null) {
-//					flowAccumulation = recursiveFlowAccumulation(flowDirection, flowAccumulation, twoDToLinearIndexing(r, c, numrows));
-//				}
-//			}
-//		}
-//		return flowAccumulation;
-//	}
-
-//	// Flow Accumulation Recursive Function Component
-//	public Integer[][] recursiveFlowAccumulation(double[][] flowDirection, Integer[][] flowAccumulation, int Index) {
-//		int numrows = flowDirection.length;
-//		int numcols = flowDirection[0].length;
-//		int r = linearToTwoDIndexing(Index, numrows)[0];
-//		int c = linearToTwoDIndexing(Index, numrows)[1];
-//		for (int x = -1; x < 2; x++) {
-//			for (int y = -1; y < 2; y++){
-//				if (x == 0 && y == 0) {
-//					continue;}
-//				if (r+y >= numrows || r+y < 0 || c+x >= numcols || c+x < 0) {
-//					continue;}
-//				double angle = Math.atan2(y,x) - Math.PI;
-//				if (flowDirection[r+y][c+x] == angle % 2*Math.PI) {
-//					int neighborIndex = twoDToLinearIndexing(r+y, c+x, numrows);
-//					if (flowAccumulation[r+y][c+x] == null){
-//						recursiveFlowAccumulation(flowDirection, flowAccumulation, twoDToLinearIndexing(r, c, numrows));
-//					}
-//					flowAccumulation[r][c] = flowAccumulation[r][c] + flowAccumulation[r+y][c+x];
-//				}
-//			}
-//		}
-//		return flowAccumulation;
-//	}
+	// Wrapper function that simulates the rainfall event to iteratively fill pits to connect the surface until the rainfall event ends
+	public FilledDataset fillPits(PitRaster pits, double[][] drainage, FlowDirectionCell[][] flowDirection, double[][] DEM, int rainfallDuration, double rainfallDepth, double cellSize) {
+		FilledDataset fillDataset = new FilledDataset(DEM, drainage, flowDirection, pits, cellSize, rainfallDuration, rainfallDepth);
+		
+		while (pits.pitDataList.get(0).spilloverTime < rainfallDuration || pits.pitDataList.isEmpty()) {
+			Comparator mycomparator;
+			Collections.sort(null);
+			fillDataset = mergePits(fillDataset);
+		}
+		return fillDataset;
+	}
 	
-	// Original Pit Definition
-//	public int[][] computePits(double[][] DEM, double[][] drainage, FlowDirectionCell[][] flowDirection, int cellSize, double rainfallIntensity) {
-//		int numrows = flowDirection.length;
-//		int numcols = flowDirection[0].length;
-//		int[][] pits = new int[numrows][numcols];
-//		List<Integer> pitCellIndicesList = new ArrayList<Integer>();
-//		List<Pit> pitDataList = new ArrayList<Pit>();
-//		
-//		int pitIDCounter = 1;
-//		for (int r = 0; r < numrows; r++) {
-//			for (int c = 0; c < numcols; c++) {
-//				int currentCellIndex = twoDToLinearIndexing(r, c, numrows);
-//				if (flowDirection[r][c].childPoint.y < 0) {
-//					pitCellIndicesList.add(currentCellIndex);
-//					ArrayList<Point> indicesDrainingToPit = new ArrayList<Point>();
-//					Point pitCellIndices = new Point(c, r);
-//					indicesDrainingToPit.add(pitCellIndices);
-//					indicesDrainingToPit = findCellsDrainingToPointNew(flowDirection, indicesDrainingToPit);
-//					for (int idx = 0; idx < indicesDrainingToPit.size(); idx++) {
-//						int rowidx = indicesDrainingToPit.get(idx).y;
-//						int colidx = indicesDrainingToPit.get(idx).x;
-//						pits[rowidx][colidx] = pitIDCounter;
-//					}
-//				} else if (Double.isNaN(flowDirection[r][c].childPoint.x)) {
-//					pits[r][c] = 0;
-//				}
-//			pitIDCounter = pitIDCounter + 1;
-//			}
-//		}
-//		pitIDCounter = 1;
-//		for (int pitIdx = 0; pitIdx < pitCellIndicesList.size(); pitIdx++) {
-//			Pit currentPit = new Pit(drainage, cellSize, DEM, flowDirection, pits, pitCellIndicesList.get(pitIdx), pitIDCounter, rainfallIntensity);
-//			pitDataList.add(currentPit);
-//		}
-//		return pits;
-//	}
-//	
-//	public ArrayList<Point> findCellsDrainingToPointNew(FlowDirectionCell[][] flowDirection, ArrayList<Point> indicesDrainingToPit) {
-//		int i = 0;
-//		while (i < indicesDrainingToPit.size()) {
-//			int currentRow = indicesDrainingToPit.get(i).y;
-//			int currentColumn = indicesDrainingToPit.get(i).x;
-//			for (int parentIdx = 0; parentIdx < flowDirection[currentRow][currentColumn].parentList.size(); parentIdx++) {
-//				indicesDrainingToPit.add(flowDirection[currentRow][currentColumn].parentList.get(parentIdx));
-//			}
-//		}
-//		return indicesDrainingToPit;
-//	}
+	// Merge two pits
+	public FilledDataset mergePits(FilledDataset fillDataset) {
+		int mergedPitID = fillDataset.fillPits.getMaximumPitID() + 1;
+		int pitOverflowedIntoListIndex = fillDataset.fillPits.getIndexOf(fillDataset.fillPits.pitDataList.get(0).spilloverPitID);
+		
+		fillDataset = resolveFilledArea(fillDataset);
+		if (fillDataset.fillPits.pitDataList.get(0).spilloverPitID != 0) {
+			for (int i = 0; i < fillDataset.fillPits.pitDataList.get(0).allPitPointsList.size(); i++) {
+				fillDataset.fillPits.pitIDMatrix[fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).y][fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).x] = mergedPitID;
+			}
+			for (int i = 0; i < fillDataset.fillPits.pitDataList.get(pitOverflowedIntoListIndex).allPitPointsList.size(); i++) {
+				fillDataset.fillPits.pitIDMatrix[fillDataset.fillPits.pitDataList.get(pitOverflowedIntoListIndex).allPitPointsList.get(i).y][fillDataset.fillPits.pitDataList.get(pitOverflowedIntoListIndex).allPitPointsList.get(i).x] = mergedPitID;
+			}
+			MergedPit mergedPit = new MergedPit(fillDataset);
+			fillDataset.fillPits.pitDataList.add(mergedPit);
+			fillDataset.fillPits.pitDataList.remove(0);
+			fillDataset.fillPits.pitDataList.remove(pitOverflowedIntoListIndex);
+		} else if (fillDataset.fillPits.pitDataList.get(0).spilloverPitID == 0) {
+			for (int i = 0; i < fillDataset.fillPits.pitDataList.get(0).allPitPointsList.size(); i++) {
+				fillDataset.fillPits.pitIDMatrix[fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).y][fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).x] = 0;
+				fillDataset.fillPits.pitDataList.remove(0);
+			}
+		}	
+		return fillDataset;
+	}
 	
-//	public List<Integer> findCellsDrainingToPoint(int index, int rowSize, int columnSize, double[][] flowDirection, List<Integer> indicesDrainingToIndex) {
-//		indicesDrainingToIndex.add(index);
-//		int r = linearToTwoDIndexing(index, rowSize)[0];
-//		int c = linearToTwoDIndexing(index, rowSize)[1];
-//		for (int x = -1; x < 2; x++) {
-//			for (int y = -1; y < 2; y++){
-//				if (x == 0 && y == 0) {
-//					continue;}
-//				if (r+y > rowSize || r+y < 1 || c+x > columnSize || c+x < 1) {
-//					continue;}
-//				double angle = Math.atan2(y,x);
-//				if (flowDirection[r+y][c+x] == angle % 2*Math.PI) {
-//					int neighborIndex = twoDToLinearIndexing(r+y, c+x, rowSize);
-//					indicesDrainingToIndex.addAll(findCellsDrainingToPoint(neighborIndex, rowSize, columnSize, flowDirection, indicesDrainingToIndex));
-//				}
-//			}
-//		}
-//		return indicesDrainingToIndex;
-//	}
-
-//	public int[] linearToTwoDIndexing(int linearIndex, int numrows) {
-//		int[] rowcol = new int[2];
-//		rowcol[0] = linearIndex % numrows; // row index
-//		rowcol[1] = linearIndex/numrows;   // column index
-//		return rowcol;
-//	}
-//	public int twoDToLinearIndexing(int rowIndex, int columnIndex, int numrows) {
-//		int Index = (columnIndex*numrows) + rowIndex;
-//
-//		return Index;
-//	}
+	public FilledDataset resolveFilledArea(FilledDataset fillDataset) {
+//		Adjust DEM and resolve flow Direction
+		for (int i = 0; i < fillDataset.fillPits.pitDataList.get(0).allPitPointsList.size(); i++) {
+			if (fillDataset.fillDEM[fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).y][fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).x] < fillDataset.fillPits.pitDataList.get(0).overflowPointElevation) {
+				fillDataset.fillDEM[fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).y][fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).x] = fillDataset.fillPits.pitDataList.get(0).overflowPointElevation;
+				//add each cell to a single flat flow direction cell object
+			}
+		}
+		fillDataset.fillFlowDirection[fillDataset.fillPits.pitDataList.get(0).pitOutletPoint.y][fillDataset.fillPits.pitDataList.get(0).pitOutletPoint.x] = new FlowDirectionCell(fillDataset.fillPits.pitDataList.get(0).outletSpilloverFlowDirection);
+		return fillDataset;
+	}
+	
 }

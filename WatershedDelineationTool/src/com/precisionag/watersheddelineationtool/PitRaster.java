@@ -19,21 +19,22 @@ import com.google.android.gms.maps.model.LatLngBounds;
 public class PitRaster {
 	//bitmap represents rasterized elevation data
 	Bitmap pitsBitmap = null;
+	List<Point> pitPointList = new ArrayList<Point>();
+	List<Pit> pitDataList = new ArrayList<Pit>();
+	int[][] pitIDMatrix;
 	
 	
 	//constructor method
 	public PitRaster(double[][] DEM, double[][] drainage, FlowDirectionCell[][] flowDirection, int cellSize, double rainfallIntensity) {
 		int numrows = flowDirection.length;
 		int numcols = flowDirection[0].length;
-		int[][] pits = new int[numrows][numcols];
-		List<Point> pitPointList = new ArrayList<Point>();
-		List<Pit> pitDataList = new ArrayList<Pit>();
+		pitIDMatrix = new int[numrows][numcols];
 		
 		int pitIDCounter = 0;
 		for (int r = 0; r < numrows; r++) {
 			for (int c = 0; c < numcols; c++) {
 				if (r == numrows-1 || r == 0 || c == numcols-1 || c == 0) {
-					pits[r][c] = -1;
+					pitIDMatrix[r][c] = -1;
 					continue;
 				}
 				if (flowDirection[r][c].childPoint.y < 0) {
@@ -45,7 +46,7 @@ public class PitRaster {
 					for (int idx = 0; idx < indicesDrainingToPit.size(); idx++) {
 						int rowidx = indicesDrainingToPit.get(idx).y;
 						int colidx = indicesDrainingToPit.get(idx).x;
-						pits[rowidx][colidx] = pitIDCounter;
+						pitIDMatrix[rowidx][colidx] = pitIDCounter;
 					}
 					pitIDCounter++;
 				}
@@ -54,20 +55,19 @@ public class PitRaster {
 		
 		// After identifying the pits matrix, gather pit data for each pit
 		for (int pitIdx = 0; pitIdx < pitPointList.size(); pitIdx++) {
-			Pit currentPit = new Pit(drainage, cellSize, DEM, flowDirection, pits, pitPointList.get(pitIdx), pitIdx, rainfallIntensity);
+			Pit currentPit = new Pit(drainage, cellSize, DEM, flowDirection, pitIDMatrix, pitPointList.get(pitIdx), pitIdx, rainfallIntensity);
 			pitDataList.add(currentPit);
 		}
 		Bitmap.Config config = Bitmap.Config.ARGB_8888;
-		Bitmap pitsBitmap = Bitmap.createBitmap(numcols, numrows, config);
+		pitsBitmap = Bitmap.createBitmap(numcols, numrows, config);
 		for (int r = 0; r < numrows; r++){
 			for (int c = 0; c < numcols; c++){
 				if (r == numrows-1 || r == 0 || c == numcols-1 || c == 0) {
 					pitsBitmap.setPixel(c, r, Color.BLACK);	
 					continue;
 				}
-				int currentPitColor = pitDataList.get(pits[r][c]).pitColor;
+				int currentPitColor = pitDataList.get(pitIDMatrix[r][c]).pitColor;
 				pitsBitmap.setPixel(c, r, currentPitColor);
-				Log.w("color", Integer.toString(currentPitColor));
 			}
 		}
 	}
@@ -89,4 +89,26 @@ public class PitRaster {
 		}
 		return indicesDrainingToPit;
 	}
+	
+	public int getIndexOf(int inputPitID){
+		for (int i = 0; i < pitDataList.size(); i++) {
+			if (pitDataList.get(i).pitID == inputPitID) {
+				return i;
+			}
+		}
+		int pitListIndex = (Integer) null;
+		return pitListIndex;
+	}
+	
+	public int getMaximumPitID() {
+		int MaxPitID = (Integer) null;
+		for (int i = 0; i < pitDataList.size(); i++) {
+			if (pitDataList.get(i).pitID > MaxPitID) {
+				MaxPitID = pitDataList.get(i).pitID;
+			}
+		}
+		
+		return MaxPitID;
+	}
+	
 }
