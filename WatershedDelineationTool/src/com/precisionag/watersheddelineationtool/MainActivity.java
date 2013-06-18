@@ -3,6 +3,8 @@ package com.precisionag.watersheddelineationtool;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,7 +54,10 @@ public class MainActivity extends Activity implements OnMapClickListener {
 	List<CustomMarker> markers;
 	private static final int ADD_MODE = 1;
 	private static final int REMOVE_MODE = 2;
-	double rainfallIntensity;
+	BigDecimal rainfallDuration = new BigDecimal(24); // hours
+	BigDecimal rainfallDepth = new BigDecimal(0.5*0.0254, MathContext.DECIMAL64); // inches
+	BigDecimal rainfallIntensity = rainfallDepth.divide(rainfallDuration, MathContext.DECIMAL64);
+	BigDecimal cellSize = new BigDecimal(3); // meters
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -70,16 +75,15 @@ public class MainActivity extends Activity implements OnMapClickListener {
 		uiSettings.setZoomControlsEnabled(false);
 		markers = new ArrayList<CustomMarker>();
 		markerMode = 0;
-		final double[][] DEM = readDEMFile("Test2");
-//		RasterLayer DEMRaster = new RasterLayer(DEM, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0));
+		final double[][] DEM = readDEMFile("Test4");
 		int numrows = DEM.length;
 		int numcols = DEM[0].length;
 		final double[][] drainage = new double[numrows][numcols];
-		RasterLayer drainageRaster = new RasterLayer(drainage, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0));
-		CustomMarker.setRaster(drainageRaster);
-		CustomMarker.setActivity(this);
-		CustomMarker.setMap(map);
-		prevoverlay = drainageRaster.createOverlay(map);
+//		RasterLayer drainageRaster = new RasterLayer(drainage, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0));
+//		CustomMarker.setRaster(drainageRaster);
+//		CustomMarker.setActivity(this);
+//		CustomMarker.setMap(map);
+//		prevoverlay = drainageRaster.createOverlay(map);
 		configSeekbar();
 		Button button = (Button) findViewById(R.id.button_delineate);
 		button.setOnClickListener(new View.OnClickListener() {
@@ -87,10 +91,10 @@ public class MainActivity extends Activity implements OnMapClickListener {
 			//Called when the user clicks the Delineate button
 			@Override
 			public void onClick(View arg0) {
-				FlowDirectionCell[][] flowDirection = computeFlowDirectionNew(DEM, drainage, rainfallIntensity);
+				WatershedDataset watershedDataset = new WatershedDataset(DEM, drainage, cellSize, rainfallDuration, rainfallDepth);
 //				RasterLayer flowDirectionRaster = new RasterLayer(flowDirection, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0));
-				Integer[][] flowAccumulation = computeFlowAccumulationNew(flowDirection);
-				Bitmap flowAccumBitmap = colorFlowAccumulation(flowAccumulation);
+//				Integer[][] flowAccumulation = computeFlowAccumulation(flowDirection);
+//				Bitmap flowAccumBitmap = colorFlowAccumulation(flowAccumulation);
 				LatLng sw = new LatLng(40.974, -86.1991);
 				LatLng ne = new LatLng(40.983, -86.1869);
 				LatLngBounds fieldBounds = new LatLngBounds(sw, ne);
@@ -99,16 +103,20 @@ public class MainActivity extends Activity implements OnMapClickListener {
 //			     .positionFromBounds(fieldBounds)
 //			     .transparency(0));
 //				groundOverlay.setVisible(true);
-				int cellSize = 1;
-				PitRaster pits = new PitRaster(DEM, drainage, flowDirection, cellSize, rainfallIntensity);
-				Bitmap pitBitmap = pits.pitsBitmap;
-				GroundOverlayOptions goverlayopts = new GroundOverlayOptions();
+				Bitmap pitBitmap = watershedDataset.pits.pitsBitmap;
 				GroundOverlay pitGroundOverlay = map.addGroundOverlay(new GroundOverlayOptions()
 			     .image(BitmapDescriptorFactory.fromBitmap(pitBitmap))
 			     .positionFromBounds(fieldBounds)
 			     .transparency(0));
 				pitGroundOverlay.setVisible(true);
-//				RasterLayer flowAccumulationRaster = new RasterLayer(flowAccumulation, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0));
+				watershedDataset = fillPits(watershedDataset);
+				Log.e("MA", Integer.toString(watershedDataset.pits.pitDataList.size()));
+				Bitmap filledPitBitmap = watershedDataset.pits.pitsBitmap;
+				GroundOverlay filledPitGroundOverlay = map.addGroundOverlay(new GroundOverlayOptions()
+			     .image(BitmapDescriptorFactory.fromBitmap(filledPitBitmap))
+			     .positionFromBounds(fieldBounds)
+			     .transparency(0));
+				filledPitGroundOverlay.setVisible(true);
 			}
 		});
 	}
@@ -238,7 +246,7 @@ public class MainActivity extends Activity implements OnMapClickListener {
 	}
 
 	// Flow Direction
-	public FlowDirectionCell[][] computeFlowDirectionNew(double[][] DEM, double[][] drainage, double rainfallIntensity) {
+	public FlowDirectionCell[][] computeFlowDirectionNew(double[][] DEM, double[][] drainage, BigDecimal rainfallIntensity2) {
 		int numrows = DEM.length;
 		int numcols = DEM[0].length;
 		FlowDirectionCell[][] flowDirection = new FlowDirectionCell[numrows][numcols];
@@ -246,14 +254,15 @@ public class MainActivity extends Activity implements OnMapClickListener {
 			for (int c = 0; c < numcols; c++) {
 				Point childPoint = null;
 				
-				// If the drainage rate is greater than the accumulation rate
-				// then the cell is a pit.
+				// If the cell is along the border then it should remain a null
 				if (r == numrows-1 || r == 0 || c == numcols-1 || c == 0) {
 					FlowDirectionCell flowDirectionCell = new FlowDirectionCell(childPoint);
 					flowDirection[r][c] = flowDirectionCell;
 					continue;
 				}
 				
+				// If the drainage rate is greater than the accumulation rate
+				// then the cell is a pit.
 //				if (drainage[r][c] >= rainfallIntensity) {
 //					FlowDirectionCell flowDirectionCell = new FlowDirectionCell(-2,-2);
 //					flowDirectionCellMatrix[r][c] = flowDirectionCell;					
@@ -264,10 +273,11 @@ public class MainActivity extends Activity implements OnMapClickListener {
 				for (int x = -1; x < 2; x++) {
 					for (int y = -1; y < 2; y++){
 						if (x == 0 && y == 0) {
-							continue;}
+							continue;
+						}
 						double distance = Math.pow((Math.pow(x, 2) + Math.pow(y, 2)),0.5);
 						double slope = (DEM[r+y][c+x] - DEM[r][c])/distance;
-						double angle = Math.atan2(y,x); 
+//						double angle = Math.atan2(y,x); 
 
 						//maintain current minimum slope, minimum slope being the steepest downslope
 						if (Double.isNaN(minimumSlope) || slope <= minimumSlope) {
@@ -277,14 +287,13 @@ public class MainActivity extends Activity implements OnMapClickListener {
 							flowDirection[r][c] = flowDirectionCell;
 						}
 					}
-				}
-				
+				}				
 				// Identification of flat spot "pits" with undefined flow direction
-				if (minimumSlope == 0) {
-					childPoint = new Point(-4, -4);
-					FlowDirectionCell flowDirectionCell = new FlowDirectionCell(childPoint);
-					flowDirection[r][c] = flowDirectionCell;
-				}
+//				if (minimumSlope == 0) {
+//					childPoint = new Point(-4, -4);
+//					FlowDirectionCell flowDirectionCell = new FlowDirectionCell(childPoint);
+//					flowDirection[r][c] = flowDirectionCell;
+//				}
 				
 				// Identification of Pits with undefined flow direction
 				if (minimumSlope >= 0) {
@@ -323,9 +332,9 @@ public class MainActivity extends Activity implements OnMapClickListener {
 		}
 		return flowDirection;
 	}
-
-	// Flow Accumulation
-	public Integer[][] computeFlowAccumulationNew(FlowDirectionCell[][] flowDirection) {
+	
+	// Recursive Flow Accumulation
+	public Integer[][] computeFlowAccumulation(FlowDirectionCell[][] flowDirection) {
 		int numrows = flowDirection.length;
 		int numcols = flowDirection[0].length;
 		Integer[][] flowAccumulation = new Integer[numrows][numcols];
@@ -339,24 +348,32 @@ public class MainActivity extends Activity implements OnMapClickListener {
 				if (r == numrows-1 || r == 0 || c == numcols-1 || c == 0) {
 					continue;
 				}
-				flowAccumulation = recursiveFlowAccumulationNew(flowDirection, flowAccumulation, r, c);
+				if (flowAccumulation[r][c] == 0) {
+					flowAccumulation = recursiveFlowAccumulation(flowDirection, flowAccumulation, r, c);
+				}
 			}
 		}
 		return flowAccumulation;
 	}
 	
-	public Integer[][] recursiveFlowAccumulationNew(FlowDirectionCell[][] flowDirection, Integer[][] flowAccumulation, int r, int c) {
+	public Integer[][] recursiveFlowAccumulation(FlowDirectionCell[][] flowDirection, Integer[][] flowAccumulation, int r, int c) {
 		int numrows = flowDirection.length;
 		int numcols = flowDirection[0].length;
-		if (flowDirection[r][c].childPoint.y == numrows-1 || flowDirection[r][c].childPoint.y == 0 || flowDirection[r][c].childPoint .x== numcols-1 || flowDirection[r][c].childPoint.x == 0) {
-			return flowAccumulation;
-		} else if (flowDirection[r][c].childPoint.y < 0){
-			return flowAccumulation;
-		} else {
-		flowAccumulation[flowDirection[r][c].childPoint.y][flowDirection[r][c].childPoint.x] = flowAccumulation[flowDirection[r][c].childPoint.y][flowDirection[r][c].childPoint.x] + 1;
-		flowAccumulation = recursiveFlowAccumulationNew(flowDirection, flowAccumulation, flowDirection[r][c].childPoint.y, flowDirection[r][c].childPoint.x);
-			return flowAccumulation;
+		flowAccumulation[r][c] = 1;
+//		Log.w("Flow Accumulation", "r=" + Integer.toString(r) + " c="+ Integer.toString(c) +" " + Integer.toString(flowAccumulation[2][2]));
+		for (int i = 0; i < flowDirection[r][c].parentList.size(); i++){
+			Point currentParent = flowDirection[r][c].parentList.get(i);
+			// skip and return if the parent is an edge cell
+			if (currentParent.y == numrows-1 || currentParent.y == 0 || currentParent.x== numcols-1 || currentParent.x == 0) {
+				return flowAccumulation;
+				
+				// Verify that the cell hasn't been computed already (value == 0). Each cell should only have the recursive function called on it once.
+			} else if (flowAccumulation[currentParent.y][currentParent.x] == 0){
+				flowAccumulation = recursiveFlowAccumulation(flowDirection, flowAccumulation, currentParent.y, currentParent.x);
+			}
+			flowAccumulation[r][c] = flowAccumulation[r][c] + flowAccumulation[currentParent.y][currentParent.x];
 		}
+		return flowAccumulation;
 	}
 	
 	public Bitmap colorFlowAccumulation(Integer[][] flowAccumulation) {
@@ -378,53 +395,239 @@ public class MainActivity extends Activity implements OnMapClickListener {
 	}
 	
 	// Wrapper function that simulates the rainfall event to iteratively fill pits to connect the surface until the rainfall event ends
-	public FilledDataset fillPits(PitRaster pits, double[][] drainage, FlowDirectionCell[][] flowDirection, double[][] DEM, int rainfallDuration, double rainfallDepth, double cellSize) {
-		FilledDataset fillDataset = new FilledDataset(DEM, drainage, flowDirection, pits, cellSize, rainfallDuration, rainfallDepth);
-		
-		while (pits.pitDataList.get(0).spilloverTime < rainfallDuration || pits.pitDataList.isEmpty()) {
-			Comparator mycomparator;
-			Collections.sort(null);
-			fillDataset = mergePits(fillDataset);
+	public WatershedDataset fillPits(WatershedDataset watershedDataset) {
+//		WatershedDataset Dataset = new WatershedDataset(DEM, drainage, flowDirection, pits, cellSize, rainfallDuration, rainfallDepth);
+		int fillcounter = 0;
+		Collections.sort(watershedDataset.pits.pitDataList);
+		Log.w("pits", "started filling");
+		while (watershedDataset.pits.pitDataList.get(0).spilloverTime.doubleValue() < rainfallDuration.doubleValue()) {
+			Log.w("MainAct-fillcounter", Integer.toString(fillcounter));
+			watershedDataset = mergePits(watershedDataset);
+			Collections.sort(watershedDataset.pits.pitDataList);
+			if (watershedDataset.pits.pitDataList.isEmpty()) {
+				break;
+			}
+			fillcounter++;
+			Log.e("MA", Integer.toString(watershedDataset.pits.pitDataList.size()));
 		}
-		return fillDataset;
+		watershedDataset.pits.updatePitsBitmap();
+
+		return watershedDataset;
 	}
 	
 	// Merge two pits
-	public FilledDataset mergePits(FilledDataset fillDataset) {
-		int mergedPitID = fillDataset.fillPits.getMaximumPitID() + 1;
-		int pitOverflowedIntoListIndex = fillDataset.fillPits.getIndexOf(fillDataset.fillPits.pitDataList.get(0).spilloverPitID);
+	public WatershedDataset mergePitsNew(WatershedDataset watershedDataset) {
+		int secondPitID = watershedDataset.pits.pitDataList.get(0).pitIdOverflowingInto; //The pit ID that the first pit overflows into
+		Log.w("pits-firstPitID", Integer.toString(watershedDataset.pits.pitDataList.get(0).pitID));
+		Log.w("pits-secondPitID", Integer.toString(secondPitID));
 		
-		fillDataset = resolveFilledArea(fillDataset);
-		if (fillDataset.fillPits.pitDataList.get(0).spilloverPitID != 0) {
-			for (int i = 0; i < fillDataset.fillPits.pitDataList.get(0).allPitPointsList.size(); i++) {
-				fillDataset.fillPits.pitIDMatrix[fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).y][fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).x] = mergedPitID;
+		// Fill the first pit and resolve flow direction. This must be completed before the new pit entry is created or else retention volumes will be incorrectly calculated (the first pit must be filled).
+		watershedDataset = resolveFilledArea(watershedDataset);
+		// Handle pits merging with other pits
+		if (secondPitID != -1) {
+			int mergedPitID = watershedDataset.pits.getMaximumPitID() + 1;
+			int secondPitListIndex = watershedDataset.pits.getIndexOf(secondPitID);
+			Log.w("pits-flowintoPitIndex", Integer.toString(secondPitListIndex));
+			Log.w("pits-newmaxPitID", Integer.toString(mergedPitID));
+
+			// re-ID the two merging pits with their new mergedPitID
+			for (int i = 0; i < watershedDataset.pits.pitDataList.get(0).allPointsList.size(); i++) {
+				watershedDataset.pits.pitIDMatrix[watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).y][watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).x] = mergedPitID;
 			}
-			for (int i = 0; i < fillDataset.fillPits.pitDataList.get(pitOverflowedIntoListIndex).allPitPointsList.size(); i++) {
-				fillDataset.fillPits.pitIDMatrix[fillDataset.fillPits.pitDataList.get(pitOverflowedIntoListIndex).allPitPointsList.get(i).y][fillDataset.fillPits.pitDataList.get(pitOverflowedIntoListIndex).allPitPointsList.get(i).x] = mergedPitID;
+			for (int i = 0; i < watershedDataset.pits.pitDataList.get(secondPitListIndex).allPointsList.size(); i++) {
+				watershedDataset.pits.pitIDMatrix[watershedDataset.pits.pitDataList.get(secondPitListIndex).allPointsList.get(i).y][watershedDataset.pits.pitDataList.get(secondPitListIndex).allPointsList.get(i).x] = mergedPitID;
 			}
-			MergedPit mergedPit = new MergedPit(fillDataset);
-			fillDataset.fillPits.pitDataList.add(mergedPit);
-			fillDataset.fillPits.pitDataList.remove(0);
-			fillDataset.fillPits.pitDataList.remove(pitOverflowedIntoListIndex);
-		} else if (fillDataset.fillPits.pitDataList.get(0).spilloverPitID == 0) {
-			for (int i = 0; i < fillDataset.fillPits.pitDataList.get(0).allPitPointsList.size(); i++) {
-				fillDataset.fillPits.pitIDMatrix[fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).y][fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).x] = 0;
-				fillDataset.fillPits.pitDataList.remove(0);
+			
+			// Update all pits that will overflow into either of the merging pits as now overflowing into the new mergedPitID
+			for (int i = 0; i < watershedDataset.pits.pitDataList.size(); i++){
+				if ((watershedDataset.pits.pitDataList.get(i).pitIdOverflowingInto == watershedDataset.pits.pitDataList.get(0).pitID) || (watershedDataset.pits.pitDataList.get(i).pitIdOverflowingInto == secondPitID)) {
+					watershedDataset.pits.pitDataList.get(i).pitIdOverflowingInto = mergedPitID;
+				}
 			}
-		}	
-		return fillDataset;
+			
+			//////////////////////////////////////////////
+			// Create the new merged pit entry
+			// single pit cell variables
+			watershedDataset.pits.pitDataList.get(0).pitID = mergedPitID;
+			watershedDataset.pits.pitDataList.get(0).pitBottomElevation = watershedDataset.pits.pitDataList.get(secondPitListIndex).pitBottomElevation;
+			watershedDataset.pits.pitDataList.get(0).pitBottomPoint = watershedDataset.pits.pitDataList.get(secondPitListIndex).pitBottomPoint;
+			// New pit takes color of the pit that is being overflowed into
+			watershedDataset.pits.pitDataList.get(0).pitColor = watershedDataset.pits.pitDataList.get(secondPitListIndex).pitColor;
+			// Whole pit depression variables
+			watershedDataset.pits.pitDataList.get(0).allPointsList.addAll(watershedDataset.pits.pitDataList.get(secondPitListIndex).allPointsList);
+			watershedDataset.pits.pitDataList.get(0).areaCellCount = new BigDecimal(watershedDataset.pits.pitDataList.get(0).allPointsList.size());
+			// Border-dependent variables and calculations
+			watershedDataset.pits.pitDataList.get(0).pitBorderIndicesList = new ArrayList<Point>(watershedDataset.pits.pitDataList.get(secondPitListIndex).pitBorderIndicesList);
+			watershedDataset.pits.pitDataList.get(0).pitBorderIndicesList.addAll(watershedDataset.pits.pitDataList.get(0).pitBorderIndicesList);
+			for (int i = 0; i < watershedDataset.pits.pitDataList.get(0).allPointsList.size(); i++) {
+				Point currentPoint = watershedDataset.pits.pitDataList.get(0).allPointsList.get(i);
+				int r = currentPoint.y;
+				int c = currentPoint.x;
+				boolean onBorder = false;
+				for (int x = -1; x < 2; x++) {
+					for (int y = -1; y < 2; y++){
+						if (x == 0 && y == 0) {
+							continue;}
+						if (watershedDataset.pits.pitIDMatrix[r+y][c+x] != watershedDataset.pits.pitIDMatrix[r][c]) {
+							BigDecimal currentElevation = new BigDecimal(watershedDataset.DEM[r][c]);
+							BigDecimal neighborElevation = new BigDecimal(watershedDataset.DEM[r+y][c+x]);
+							onBorder = true;
+							if ((watershedDataset.pits.pitDataList.get(0).spilloverElevation == null) || (currentElevation.doubleValue() <= watershedDataset.pits.pitDataList.get(0).spilloverElevation.doubleValue() && neighborElevation.doubleValue() <= watershedDataset.pits.pitDataList.get(0).spilloverElevation.doubleValue())) {
+								watershedDataset.pits.pitDataList.get(0).minOutsidePerimeterElevation = neighborElevation;
+								watershedDataset.pits.pitDataList.get(0).minInsidePerimeterElevation = currentElevation;
+								watershedDataset.pits.pitDataList.get(0).spilloverElevation = neighborElevation.max(currentElevation);
+								watershedDataset.pits.pitDataList.get(0).pitOutletPoint = currentPoint;
+								watershedDataset.pits.pitDataList.get(0).outletSpilloverFlowDirection = new Point(c+x, r+y);
+								watershedDataset.pits.pitDataList.get(0).pitIdOverflowingInto = watershedDataset.pits.pitIDMatrix[r+y][c+x];
+							}
+						}
+					}
+				}
+				if (onBorder == false) {
+					watershedDataset.pits.pitDataList.get(0).pitBorderIndicesList.remove(currentPoint);
+				}
+			}
+			// Volume/elevation-dependent variables and calculations
+			watershedDataset.pits.pitDataList.get(0).filledVolume = watershedDataset.pits.pitDataList.get(0).retentionVolume;
+			watershedDataset.pits.pitDataList.get(0).retentionVolume = watershedDataset.pits.pitDataList.get(0).filledVolume;
+			watershedDataset.pits.pitDataList.get(0).cellCountToBeFilled = 0;
+			for (int i = 0; i < watershedDataset.pits.pitDataList.get(0).allPointsList.size(); i++) {
+				Point currentPoint = watershedDataset.pits.pitDataList.get(0).allPointsList.get(i);
+				int r = currentPoint.y;
+				int c = currentPoint.x;
+				if (watershedDataset.DEM[r][c] < watershedDataset.pits.pitDataList.get(0).spilloverElevation.doubleValue()) {
+					watershedDataset.pits.pitDataList.get(0).retentionVolume = watershedDataset.pits.pitDataList.get(0).retentionVolume.add(watershedDataset.pits.pitDataList.get(secondPitListIndex).spilloverElevation.subtract(new BigDecimal(watershedDataset.DEM[r][c]), MathContext.DECIMAL64).multiply(cellSize.pow(2, MathContext.DECIMAL64), MathContext.DECIMAL64), MathContext.DECIMAL64);
+					watershedDataset.pits.pitDataList.get(0).cellCountToBeFilled = watershedDataset.pits.pitDataList.get(0).cellCountToBeFilled + 1;
+				}
+			}
+			//Sum the drainage taking place in the pit
+			watershedDataset.pits.pitDataList.get(0).pitDrainageRate = new BigDecimal(0);
+			for (int listIdx = 0; listIdx < watershedDataset.pits.pitDataList.get(0).allPointsList.size(); listIdx++) {
+				Point currentPoint = watershedDataset.pits.pitDataList.get(0).allPointsList.get(listIdx);
+				int r = currentPoint.y;
+				int c = currentPoint.x;
+				watershedDataset.pits.pitDataList.get(0).pitDrainageRate = watershedDataset.pits.pitDataList.get(0).pitDrainageRate.add(new BigDecimal(watershedDataset.drainage[r][c]), MathContext.DECIMAL64);
+			}
+			watershedDataset.pits.pitDataList.get(0).netAccumulationRate = (rainfallIntensity.multiply(watershedDataset.pits.pitDataList.get(0).areaCellCount)).subtract(watershedDataset.pits.pitDataList.get(0).pitDrainageRate, MathContext.DECIMAL64);
+			watershedDataset.pits.pitDataList.get(0).spilloverTime = watershedDataset.pits.pitDataList.get(0).retentionVolume.divide(cellSize.pow(2, MathContext.DECIMAL64).multiply(watershedDataset.pits.pitDataList.get(0).netAccumulationRate, MathContext.DECIMAL64), MathContext.DECIMAL64);
+
+			//////////////////////////////////
+
+			// Removed the second pit
+			watershedDataset.pits.pitDataList.remove(secondPitListIndex);
+
+			// Handle pits merging with pit ID -1 (areas flowing off the map)
+		} else if (secondPitID == -1) {
+			// re-ID the filled pit as pit ID -1
+			for (int i = 0; i < watershedDataset.pits.pitDataList.get(0).allPointsList.size(); i++) {
+				watershedDataset.pits.pitIDMatrix[watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).y][watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).x] = -1;
+			}
+
+			// Update all pits that will overflow into the filled pit as now overflowing into pit ID -1
+			for (int i = 0; i < watershedDataset.pits.pitDataList.size(); i++){
+				if (watershedDataset.pits.pitDataList.get(i).pitIdOverflowingInto == watershedDataset.pits.pitDataList.get(0).pitID) {
+					watershedDataset.pits.pitDataList.get(i).pitIdOverflowingInto = -1;
+				}
+			}
+			watershedDataset.pits.pitDataList.remove(0);
+		}
+		return watershedDataset;	
 	}
 	
-	public FilledDataset resolveFilledArea(FilledDataset fillDataset) {
-//		Adjust DEM and resolve flow Direction
-		for (int i = 0; i < fillDataset.fillPits.pitDataList.get(0).allPitPointsList.size(); i++) {
-			if (fillDataset.fillDEM[fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).y][fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).x] < fillDataset.fillPits.pitDataList.get(0).overflowPointElevation) {
-				fillDataset.fillDEM[fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).y][fillDataset.fillPits.pitDataList.get(0).allPitPointsList.get(i).x] = fillDataset.fillPits.pitDataList.get(0).overflowPointElevation;
+	// Merge two pits
+	public WatershedDataset mergePits(WatershedDataset watershedDataset) {
+		int overflowIntoPitID = watershedDataset.pits.pitDataList.get(0).pitIdOverflowingInto; //The pit ID that the first pit overflows into
+		Log.w("pits-firstPitID", Integer.toString(watershedDataset.pits.pitDataList.get(0).pitID));
+		Log.w("pits-secondPitID", Integer.toString(overflowIntoPitID));
+//		int pit1556index = watershedDataset.pits.pitDataList.get(watershedDataset.pits.getIndexOf(1556)).pitIdOverflowingInto;
+//		Log.w("pits1556index", Integer.toString(pit1556index));
+		// Fill the first pit and resolve flow direction. This must be completed before the new pit entry is created or else retention volumes will be incorrectly calculated (the first pit must be filled).
+		watershedDataset = resolveFilledArea(watershedDataset);
+		// Handle pits merging with other pits
+		if (overflowIntoPitID != -1) {
+			int mergedPitID = watershedDataset.pits.getMaximumPitID() + 1;
+			int pitOverflowedIntoListIndex = watershedDataset.pits.getIndexOf(overflowIntoPitID);
+			Log.w("pits-flowintoPitIndex", Integer.toString(pitOverflowedIntoListIndex));
+			Log.w("pits-newmaxPitID", Integer.toString(mergedPitID));
+
+
+			// re-ID the two merging pits with their new mergedPitID
+			for (int i = 0; i < watershedDataset.pits.pitDataList.get(0).allPointsList.size(); i++) {
+				watershedDataset.pits.pitIDMatrix[watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).y][watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).x] = mergedPitID;
+			}
+			for (int i = 0; i < watershedDataset.pits.pitDataList.get(pitOverflowedIntoListIndex).allPointsList.size(); i++) {
+				watershedDataset.pits.pitIDMatrix[watershedDataset.pits.pitDataList.get(pitOverflowedIntoListIndex).allPointsList.get(i).y][watershedDataset.pits.pitDataList.get(pitOverflowedIntoListIndex).allPointsList.get(i).x] = mergedPitID;
+			}
+			// Create the new merged pit entry
+			Pit mergedPit = new Pit(watershedDataset);
+			
+			// Update all pits that will overflow into either of the merging pits as now overflowing into the new mergedPitID
+			for (int i = 0; i < watershedDataset.pits.pitDataList.size(); i++){
+				if ((watershedDataset.pits.pitDataList.get(i).pitIdOverflowingInto == watershedDataset.pits.pitDataList.get(0).pitID) || (watershedDataset.pits.pitDataList.get(i).pitIdOverflowingInto == overflowIntoPitID)) {
+					watershedDataset.pits.pitDataList.get(i).pitIdOverflowingInto = mergedPitID;
+				}
+			}
+			// Update the pitDataList. To preserve the index pitOverflowedIntoListIndex, it must be removed before pit(0)
+			pitOverflowedIntoListIndex = watershedDataset.pits.getIndexOf(overflowIntoPitID);
+			watershedDataset.pits.pitDataList.add(mergedPit);
+			watershedDataset.pits.pitDataList.remove(pitOverflowedIntoListIndex);
+			watershedDataset.pits.pitDataList.remove(0);
+			
+			// Handle pits merging with pit ID -1 (areas flowing off the map)
+		} else if (overflowIntoPitID == -1) {
+			// re-ID the filled pit as pit ID -1
+			for (int i = 0; i < watershedDataset.pits.pitDataList.get(0).allPointsList.size(); i++) {
+				watershedDataset.pits.pitIDMatrix[watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).y][watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).x] = -1;
+			}
+			
+			// Update all pits that will overflow into the filled pit as now overflowing into pit ID -1
+			for (int i = 0; i < watershedDataset.pits.pitDataList.size(); i++){
+				if (watershedDataset.pits.pitDataList.get(i).pitIdOverflowingInto == watershedDataset.pits.pitDataList.get(0).pitID) {
+					watershedDataset.pits.pitDataList.get(i).pitIdOverflowingInto = -1;
+				}
+			}
+			watershedDataset.pits.pitDataList.remove(0);
+		}	
+
+		return watershedDataset;
+	}
+	
+	public WatershedDataset resolveFilledArea(WatershedDataset watershedDataset) {
+		List<Point> allPointsToResolve = new ArrayList<Point>();
+		List<Point> pointsToResolve = new ArrayList<Point>();
+		// Adjust DEM elevations
+		for (int i = 0; i < watershedDataset.pits.pitDataList.get(0).allPointsList.size(); i++) {
+			if (watershedDataset.DEM[watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).y][watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).x] < watershedDataset.pits.pitDataList.get(0).spilloverElevation.doubleValue()) {
+				watershedDataset.DEM[watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).y][watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).x] = watershedDataset.pits.pitDataList.get(0).spilloverElevation.doubleValue();
+				Point pointToResolve = new Point(watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).x, watershedDataset.pits.pitDataList.get(0).allPointsList.get(i).y);
+				allPointsToResolve.add(pointToResolve);
 				//add each cell to a single flat flow direction cell object
 			}
 		}
-		fillDataset.fillFlowDirection[fillDataset.fillPits.pitDataList.get(0).pitOutletPoint.y][fillDataset.fillPits.pitDataList.get(0).pitOutletPoint.x] = new FlowDirectionCell(fillDataset.fillPits.pitDataList.get(0).outletSpilloverFlowDirection);
-		return fillDataset;
+		
+		// Correct flow direction
+		watershedDataset.flowDirection[watershedDataset.pits.pitDataList.get(0).pitOutletPoint.y][watershedDataset.pits.pitDataList.get(0).pitOutletPoint.x] = new FlowDirectionCell(watershedDataset.pits.pitDataList.get(0).outletSpilloverFlowDirection);
+		pointsToResolve.add(watershedDataset.pits.pitDataList.get(0).pitOutletPoint);
+		while (!pointsToResolve.isEmpty()) {
+			Point currentPoint = pointsToResolve.get(0);
+			pointsToResolve.remove(0);
+			for (int x = -1; x < 2; x++) {
+				for (int y = -1; y < 2; y++){
+					if (x == 0 && y == 0) {
+						continue;
+					}
+					Point neighborPoint = new Point(currentPoint.x + x, currentPoint.y + y);
+					// check if the point is part of the flat area to be resolved, but not already on the list
+					if (allPointsToResolve.contains(neighborPoint) && !pointsToResolve.contains(neighborPoint)) {
+						watershedDataset.flowDirection[neighborPoint.y][neighborPoint.x].childPoint = currentPoint;
+						pointsToResolve.add(neighborPoint);
+						allPointsToResolve.remove(neighborPoint);
+					}
+				}			
+			}
+			
+		}
+		return watershedDataset;
 	}
 	
 }
