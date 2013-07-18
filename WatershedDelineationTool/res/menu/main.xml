@@ -1,34 +1,32 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <item android:id="@+id/menu_settings"
-          android:orderInCategory="100"
-          android:showAsAction="never"
-          android:title="@string/menu_settings"/>   
-          
-    <item android:id="@+id/menu_add"
-          android:icon="@drawable/content_new"
-          android:title="Add Marker"
-          android:showAsAction="always" />
-            
-    <item android:id="@+id/menu_remove"
-          android:icon="@drawable/content_remove"
-          android:title="Remove Marker"
-          android:showAsAction="always" />
-    
-    <item android:id="@+id/menu_place_drainage_tile"
-          android:icon="@drawable/av_download"
-          android:title="Edit Drainage Tiles"
-          android:showAsAction="always" />
-    
-    <item android:id="@+id/menu_layers"
-          android:icon="@drawable/av_add_to_queue"
-          android:title="Map Layers"
-          android:showAsAction="always" />
-    
-    <item android:id="@+id/menu_draw_delineation_vertices"
-          android:icon="@drawable/content_edit"
-          android:title="Draw Vertices"
-          android:showAsAction="always" />
-    
+    <item
+        android:id="@+id/menu_choose_dem"
+        android:showAsAction="never"
+        android:title="Choose DEM"/>
+    <item
+        android:id="@+id/menu_settings"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/menu_settings"/>
+    <item
+        android:id="@+id/menu_center"
+        android:showAsAction="never"
+        android:title="Center map on DEM"/>
+    <item
+        android:id="@+id/menu_dem"
+        android:checkable="true"
+        android:checked="true"
+        android:enabled="true"
+        android:showAsAction="never"
+        android:title="DEM"/>
+
+    <item
+        android:id="@+id/menu_catchments"
+        android:checkable="true"
+        android:checked="true"
+        android:enabled="false"
+        android:showAsAction="never"
+        android:title="Catchments"/>
 
 </menu>
