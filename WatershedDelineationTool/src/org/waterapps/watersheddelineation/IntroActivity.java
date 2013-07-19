@@ -1,34 +1,32 @@
 package org.waterapps.watersheddelineation;
 
 import android.app.Activity;
-import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 /**
- * Created by steve on 7/15/13.
+ * Created by steve on 7/18/13.
  */
-public class HelpActivity extends Activity {
+public class IntroActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        WebView webview = new WebView(this);
-        setContentView(webview);
-        webview.loadUrl("file:///android_asset/Help.html");
-        webview.setWebViewClient(new WebViewClient(){
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.contains("intro-url")) {
-                    startActivity(new Intent(MainActivity.context, IntroActivity.class));
-                    return true;
-                } else {
-                    return false;
-                }
+        setContentView(R.layout.activity_intro);
+        ImageView iv = (ImageView) findViewById(R.id.imageView);
+        iv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
             }
         });
+        Toast toast = Toast.makeText(MainActivity.context, "Tap anywhere to dismiss.", Toast.LENGTH_LONG);
+        toast.show();
     }
 
     @Override

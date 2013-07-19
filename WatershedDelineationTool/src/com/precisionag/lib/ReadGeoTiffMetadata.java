@@ -14,7 +14,7 @@ import java.text.DateFormat;
  */
 public class ReadGeoTiffMetadata {
     public static DemFile readMetadata(File file) {
-        String fileName = file.getName();
+        String fileName = file.getPath();
         DateFormat df = DateFormat.getDateInstance();
         String timeStamp = df.format(file.lastModified());
         URI fileUri = URI.create(Uri.fromFile(file).toString());
@@ -27,9 +27,11 @@ public class ReadGeoTiffMetadata {
         double latLng[];
         CoordinateConversion conversion = new CoordinateConversion();
         latLng = conversion.utm2LatLon("16 N " + Integer.toString((int)longitude) + " " + Integer.toString((int)latitude));
-        double scale = TiffDecoder.nativeTiffGetScale();
-        double width = scale*TiffDecoder.nativeTiffGetHeight()/(111111.0);
-        double height = scale*TiffDecoder.nativeTiffGetWidth()/(111111.0*Math.cos(Math.toRadians(latLng[0])));
+        double scaleX = TiffDecoder.nativeTiffGetScaleX();
+        double scaleY = TiffDecoder.nativeTiffGetScaleY();
+
+        double width = scaleX*TiffDecoder.nativeTiffGetHeight()/(111111.0);
+        double height = scaleY*TiffDecoder.nativeTiffGetWidth()/(111111.0*Math.cos(Math.toRadians(latLng[0])));
 
         return new DemFile((float)(latLng[0]-width), ((float)latLng[1]), (float)latLng[0], (float)(latLng[1]+height), fileName, timeStamp, fileUri);
     }

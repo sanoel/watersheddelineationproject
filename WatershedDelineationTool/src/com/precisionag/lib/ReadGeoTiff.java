@@ -26,7 +26,6 @@ public class ReadGeoTiff implements ReadElevationRaster {
         raster.elevationData = new float[raster.getNrows()][raster.getNcols()];
         String noDataString = TiffDecoder.nativeTiffGetNoData();
         float nodata = Float.parseFloat(noDataString);
-        raster.noDataVal = nodata;
         //float nodata = -9999.0f;
 
         for(int i=0; i<raster.getNrows(); i++) {
@@ -56,9 +55,11 @@ public class ReadGeoTiff implements ReadElevationRaster {
         String UTMZone = UTM.substring(18, 20).concat(" ").concat(UTM.substring(20, 21)).concat(" ");
         Log.d("utmzone", UTMZone);
         latLng = conversion.utm2LatLon(UTMZone + Integer.toString((int)longitude) + " " + Integer.toString((int)latitude));
-        double scale = TiffDecoder.nativeTiffGetScale();
-        double width = scale*raster.getNrows()/(111111.0);
-        double height = scale*raster.getNcols()/(111111.0*Math.cos(Math.toRadians(latLng[0])));
+        double scaleX = TiffDecoder.nativeTiffGetScaleX();
+        double scaleY = TiffDecoder.nativeTiffGetScaleY();
+
+        double width = scaleX*raster.getNrows()/(111111.0);
+        double height = scaleY*raster.getNcols()/(111111.0*Math.cos(Math.toRadians(latLng[0])));
         raster.setLowerLeft(new LatLng(latLng[0]-width, latLng[1]));
         raster.setUpperRight(new LatLng(latLng[0], latLng[1]+height));
         return raster;

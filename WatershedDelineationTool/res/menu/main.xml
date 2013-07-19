@@ -20,7 +20,6 @@
         android:enabled="true"
         android:showAsAction="never"
         android:title="DEM"/>
-
     <item
         android:id="@+id/menu_catchments"
         android:checkable="true"
@@ -28,5 +27,9 @@
         android:enabled="false"
         android:showAsAction="never"
         android:title="Catchments"/>
+    <item
+        android:id="@+id/menu_help"
+        android:showAsAction="never"
+        android:title="Help"/>
 
 </menu>

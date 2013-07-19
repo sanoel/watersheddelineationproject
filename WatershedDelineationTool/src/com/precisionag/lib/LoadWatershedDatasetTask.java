@@ -4,6 +4,8 @@ import org.waterapps.watersheddelineation.MainActivity;
 import org.waterapps.watersheddelineation.WatershedDataset;
 import org.waterapps.watersheddelineation.WatershedDataset.WatershedDatasetListener;
 
+import com.tiffdecoder.TiffDecoder;
+
 
 import android.os.AsyncTask;
 import android.view.View;
@@ -11,13 +13,9 @@ import android.widget.Toast;
 
 public class LoadWatershedDatasetTask extends AsyncTask <String, String, WatershedDataset> implements WatershedDatasetListener {
 	float[][] DEM;
-	float cellSize;
-	float noDataVal;
 	
 	public LoadWatershedDatasetTask(ElevationRaster raster) {
 		DEM = raster.getData();
-		noDataVal = raster.noDataVal;
-//		cellSize = raster
 	}
 
 	protected void onPreExecute() {
@@ -28,7 +26,10 @@ public class LoadWatershedDatasetTask extends AsyncTask <String, String, Watersh
 
 	protected WatershedDataset doInBackground(String... params) {		 
 		// Background Work
-		WatershedDataset watershedDataset = new WatershedDataset(DEM, 3.0, noDataVal, this);
+		float cellSizeX = TiffDecoder.nativeTiffGetScaleX();
+		float cellSizeY = TiffDecoder.nativeTiffGetScaleY();
+		float noDataVal = Float.valueOf(TiffDecoder.nativeTiffGetNoData());
+		WatershedDataset watershedDataset = new WatershedDataset(DEM, cellSizeX, cellSizeY, noDataVal, this);
 		return watershedDataset;
 	}
 

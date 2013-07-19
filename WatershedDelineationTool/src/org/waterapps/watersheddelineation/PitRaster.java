@@ -10,6 +10,7 @@ import org.waterapps.watersheddelineation.WatershedDataset.WatershedDatasetListe
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.util.Log;
 
 public class PitRaster {
 	// bitmap represents rasterized elevation data
@@ -25,7 +26,7 @@ public class PitRaster {
 	public static float alpha;
 
 	// constructor method
-	public PitRaster(float[][] dem, float[][] drainage,FlowDirectionCell[][] flowDirection, double cellSize, WatershedDatasetListener listener) {
+	public PitRaster(float[][] dem, float[][] drainage,FlowDirectionCell[][] flowDirection, float inputCellSizeX, float inputCellSizeY, WatershedDatasetListener listener) {
 		this.listener = listener;
 		numrows = flowDirection.length;
 		numcols = flowDirection[0].length;
@@ -66,7 +67,7 @@ public class PitRaster {
 		List<Long> pitTimes = new ArrayList<Long>(pitPointList.size());
 		pitDataList = new ArrayList<Pit>(pitPointList.size());
 		for (int i = 0; i < pitPointList.size(); i++) {
-			Pit currentPit = new Pit(drainage, cellSize, dem, flowDirection, pitIDMatrix, pitPointList.get(i), i);
+			Pit currentPit = new Pit(drainage, inputCellSizeX, inputCellSizeY, dem, flowDirection, pitIDMatrix, pitPointList.get(i), i);
 			pitDataList.add(currentPit);
 			status = (int) (65 + (25 * (i/(double)pitPointList.size())));
 			listener.watershedDatasetOnProgress(status, "Computing Surface Depression Dimensions");
@@ -136,18 +137,17 @@ public class PitRaster {
 		pitsBitmap = Bitmap.createBitmap(numcols, numrows, config);
 		for (int r = 0; r < numrows; r++) {
 			for (int c = 0; c < numcols; c++) {
-				if (r == numrows - 1 || r == 0 || c == numcols - 1 || c == 0) {
-					pitsBitmap.setPixel(c, r, Color.TRANSPARENT);
+				if (r >= numrows - 1 || r <= 0 || c >= numcols - 1 || c <= 0) {
+					pitsBitmap.setPixel(numcols - 1 - c, r, Color.TRANSPARENT);
 					continue;
 				}
-				// verify that pitID exists (
+				// verify that pitID exists
 				if (this.getIndexOf(pitIDMatrix[r][c]) == -1) {
 					int currentPitColor = Color.TRANSPARENT;
-					pitsBitmap.setPixel(c, r, currentPitColor);
+					pitsBitmap.setPixel(numcols - 1 - c, r, currentPitColor);
 				} else {
 					int currentPitColor = pitDataList.get(this.getIndexOf(pitIDMatrix[r][c])).color;
-//					currentPitColor = transparency ? currentPitColor : Color.argb(80, Color.red(currentPitColor), Color.green(currentPitColor), Color.blue(currentPitColor));
-					pitsBitmap.setPixel(c, r, currentPitColor);
+					pitsBitmap.setPixel(numcols - 1 - c, r, currentPitColor);
 				}
 			}
 		}

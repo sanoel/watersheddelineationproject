@@ -13,10 +13,12 @@ import android.util.Log;
 
 public class WatershedDataset {
 	FlowDirectionCell[][] flowDirection;
-	float[][] DEM;
+	float[][] originalDem;
+	float[][] Dem;
 	float[][] drainage;
 	PitRaster pits;
-	double cellSize;
+	float cellSizeX;
+	float cellSizeY;
 	static int status = 0;
 	static String statusMessage = "Reading DEM";
 	public static float noDataVal;
@@ -33,20 +35,22 @@ public class WatershedDataset {
 
 
 	// Constructor
-	public WatershedDataset(float[][] inputDEM, double inputCellSize, float inputNoDataVal, AsyncTask task) {
+	public WatershedDataset(float[][] inputDem, float inputCellSizeX, float inputCellSizeY, float inputNoDataVal, AsyncTask task) {
 
 		if(task instanceof WatershedDatasetListener) {
 			listener = (WatershedDatasetListener) task;
 		} else {
 			throw new ClassCastException("WatershedDataset - Task must implement WatershedDatasetListener");
 		}
-		
+
 		noDataVal = inputNoDataVal;
 		drainage = null;
-		cellSize = inputCellSize;
+		cellSizeX = inputCellSizeX;
+		cellSizeY = inputCellSizeY;
 		// Load the DEM
 		listener.watershedDatasetOnProgress(status, "Reading DEM");
-		DEM = inputDEM;
+		Dem = inputDem;
+		originalDem = inputDem;
 		listener.watershedDatasetOnProgress(status, "Removing NoDATA values from the DEM");
 		removeDEMNoData();
 		listener.watershedDatasetOnProgress(status, "Discovering Flow Routes");
@@ -55,24 +59,31 @@ public class WatershedDataset {
 
 		// Compute Pits
 		listener.watershedDatasetOnProgress(status, "Identifying Surface Depressions");
-		pits = new PitRaster(DEM, drainage, flowDirection, cellSize, listener);
+		pits = new PitRaster(Dem, drainage, flowDirection, cellSizeX, cellSizeY, listener);
 		listener.watershedDatasetOnProgress(status, "Done");
+	}
+	
+	public void setTask(AsyncTask task){
+		if(task instanceof WatershedDatasetListener) {
+			listener = (WatershedDatasetListener) task;
+		} else {
+			throw new ClassCastException("WatershedDataset - Task must implement WatershedDatasetListener");
+		}
 	}
 
 	private float[][] removeDEMNoData() {
-		int numrows = DEM.length;
-		int numcols = DEM[0].length;
+		int numrows = Dem.length;
+		int numcols = Dem[0].length;
 		noDataCellsRemoved = 0;
 		double distance;
 		double weight;
-		float[][] newDEM = DEM;
-		int noDataVal = -9999;
+		float[][] newDEM = Dem;
 		boolean noDataCellsRemaining = true;
 		while (noDataCellsRemaining == true) {
 			noDataCellsRemaining = false;
 			for (int r = 0; r < numrows; r++) {
 				for (int c = 0; c < numcols; c++) { 
-					if (DEM[r][c] == noDataVal) {
+					if (Dem[r][c] == noDataVal) {
 						float weightsum = 0;
 						float weightedvalsum = 0;
 						for (int x = -2; x < 3; x++) {
@@ -86,11 +97,11 @@ public class WatershedDataset {
 									continue;
 								}
 								//verify that the neighbor cell is not NoDATA, as this will break the IDW computation
-								if (DEM[r+y][c+x] != noDataVal) {
+								if (Dem[r+y][c+x] != noDataVal) {
 									distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)); 
 									weight = 1 / distance;
 									weightsum += weight;
-									weightedvalsum += DEM[r+y][c+x] * weight;
+									weightedvalsum += Dem[r+y][c+x] * weight;
 									newDEM[r][c] = weightedvalsum/weightsum;
 
 								}
@@ -111,8 +122,8 @@ public class WatershedDataset {
 	}
 
 	public FlowDirectionCell[][] computeFlowDirection() {
-		int numrows = DEM.length;
-		int numcols = DEM[0].length;
+		int numrows = Dem.length;
+		int numcols = Dem[0].length;
 
 		flowDirection = new FlowDirectionCell[numrows][numcols];
 		for (int r = 0; r < numrows; r++) {
@@ -138,7 +149,7 @@ public class WatershedDataset {
 							continue;
 						}
 						double distance = Math.sqrt((Math.pow(x, 2) + Math.pow(y, 2)));
-						double slope = (DEM[r+y][c+x] - DEM[r][c])/distance;
+						double slope = (Dem[r+y][c+x] - Dem[r][c])/distance;
 						//maintain current minimum slope, minimum slope being the steepest downslope
 						if (Double.isNaN(minimumSlope) || slope <= minimumSlope) {
 							minimumSlope = slope;
@@ -192,13 +203,13 @@ public class WatershedDataset {
 	}
 
 	public void resolveFlowDirectionParents() {
-		int numrows = DEM.length;
-		int numcols = DEM[0].length;
+		int numrows = Dem.length;
+		int numcols = Dem[0].length;
 		for (int r = 0; r < numrows; r++) {
 			for (int c = 0; c < numcols; c++) {			
 				// If the drainage rate is greater than the accumulation rate
 				// then the cell is a pit.
-				if (r == numrows-1 || r == 0 || c == numcols-1 || c == 0) {
+				if (r >= numrows-1 || r <= 0 || c >= numcols-1 || c <= 0) {
 					continue;
 				}
 				Point currentPoint = new Point(c, r);
@@ -208,7 +219,7 @@ public class WatershedDataset {
 					for (int y = -1; y < 2; y++){
 						if (x == 0 && y == 0) {
 							continue;}
-						if (r+y == numrows-1 || r+y == 0 || c+x == numcols-1 || c+x == 0) {
+						if (r+y >= numrows-1 || r+y <= 0 || c+x >= numcols-1 || c+x <= 0) {
 							continue;
 						}
 						if (flowDirection[r+y][c+x].childPoint.x == currentPoint.x && flowDirection[r+y][c+x].childPoint.y == currentPoint.y) {
@@ -221,22 +232,23 @@ public class WatershedDataset {
 			}
 		}
 	}
-	
+
 	// Wrapper function that simulates the rainfall event to iteratively fill pits to connect the surface until the rainfall event ends
 	@SuppressWarnings("unchecked")
 	public boolean fillPits() {
+		Log.w("Rainfall amount", Double.toString(RainfallSimConfig.rainfallDepth));
 		statusMessage = "Filling and Merging Depressions";
 		int fillcounter = 0;
 		Collections.sort(this.pits.pitDataList);
 		int numberOfPits = pits.pitDataList.size();
 		while ((pits.pitDataList.get(0).spilloverTime < RainfallSimConfig.rainfallDuration) || (fillAllPits)) {
 			mergePits();
-			Collections.sort(this.pits.pitDataList);
 			if (this.pits.pitDataList.isEmpty()) {
 				// No more pits exist, filling is 100% complete for this simulation
 				status = 100;
 				break;
 			}
+			Collections.sort(this.pits.pitDataList);
 			fillcounter++;
 			// update the filling status
 			status = (int) (100 * (fillcounter/(double)numberOfPits));
@@ -256,7 +268,7 @@ public class WatershedDataset {
 		int secondPitID = firstPit.pitIdOverflowingInto; //The pit ID that the first pit overflows into
 
 		// Fill the first pit and resolve flow direction. This must be completed before the new pit entry is created or else retention volumes will be incorrectly calculated (the first pit must be filled).
-		resolveFilledArea();
+
 		// Handle pits merging with other pits
 		if (secondPitID != -1) {
 			int mergedPitID = this.pits.getMaximumPitID() + 1;
@@ -270,6 +282,8 @@ public class WatershedDataset {
 			for (int i = 0; i < secondPit.allPointsList.size(); i++) {
 				this.pits.pitIDMatrix[secondPit.allPointsList.get(i).y][secondPit.allPointsList.get(i).x] = mergedPitID;
 			}
+
+			resolveFilledArea();
 
 			// Update all pits that will overflow into either of the merging pits as now overflowing into the new mergedPitID
 			for (int i = 0; i < this.pits.pitDataList.size(); i++){
@@ -292,6 +306,7 @@ public class WatershedDataset {
 			firstPit.pitBorderIndicesList.addAll(secondPit.pitBorderIndicesList);
 			firstPit.spilloverElevation = Float.NaN;
 
+			// traverse in reverse order.  some of the border indices will be found to be not on the border and removed from the list using the onBorder variable
 			for (int i = firstPit.pitBorderIndicesList.size()-1; i > -1; i--) {
 				Point currentPoint = firstPit.pitBorderIndicesList.get(i);
 				int r = currentPoint.y;
@@ -302,10 +317,10 @@ public class WatershedDataset {
 						if (x == 0 && y == 0) {
 							continue;}
 						if (this.pits.pitIDMatrix[r+y][c+x] != this.pits.pitIDMatrix[r][c]) {
-							double currentElevation = this.DEM[r][c];
-							double neighborElevation = this.DEM[r+y][c+x];
+							double currentElevation = this.Dem[r][c];
+							double neighborElevation = this.Dem[r+y][c+x];
 							onBorder = true;
-							if (Double.isNaN(firstPit.spilloverElevation) || (currentElevation <= firstPit.spilloverElevation && neighborElevation <= firstPit.spilloverElevation)) {
+							if (Float.isNaN(firstPit.spilloverElevation) || (currentElevation <= firstPit.spilloverElevation && neighborElevation <= firstPit.spilloverElevation)) {
 								firstPit.minOutsidePerimeterElevation = neighborElevation;
 								firstPit.minInsidePerimeterElevation = currentElevation;
 								firstPit.spilloverElevation = (float) Math.max(neighborElevation, currentElevation);
@@ -329,8 +344,8 @@ public class WatershedDataset {
 				Point currentPoint = firstPit.allPointsList.get(i);
 				int r = currentPoint.y;
 				int c = currentPoint.x;
-				if (this.DEM[r][c] < firstPit.spilloverElevation) {
-					firstPit.retentionVolume = firstPit.retentionVolume + ((firstPit.spilloverElevation - this.DEM[r][c]) * Math.pow(cellSize, 2));
+				if (this.Dem[r][c] < firstPit.spilloverElevation) {
+					firstPit.retentionVolume += ((firstPit.spilloverElevation - this.Dem[r][c]) * cellSizeX*cellSizeY);
 					firstPit.cellCountToBeFilled = firstPit.cellCountToBeFilled + 1;
 				}
 			}
@@ -344,7 +359,7 @@ public class WatershedDataset {
 			//					firstPit.pitDrainageRate = firstPit.pitDrainageRate; // + drainage[r][c]
 			//				}
 			firstPit.netAccumulationRate = (RainfallSimConfig.rainfallIntensity * firstPit.areaCellCount) - firstPit.pitDrainageRate;
-			firstPit.spilloverTime = firstPit.retentionVolume/(Math.pow(cellSize, 2) * firstPit.netAccumulationRate);
+			firstPit.spilloverTime = firstPit.retentionVolume/(cellSizeX*cellSizeY * firstPit.netAccumulationRate);
 
 			// Removed the second pit
 			this.pits.pitDataList.remove(secondPit);
@@ -355,6 +370,7 @@ public class WatershedDataset {
 			for (int i = 0; i < firstPit.allPointsList.size(); i++) {
 				this.pits.pitIDMatrix[firstPit.allPointsList.get(i).y][firstPit.allPointsList.get(i).x] = -1;
 			}
+			resolveFilledArea();
 
 			// Update all pits that will overflow into the filled pit as now overflowing into pit ID -1
 			for (int i = 0; i < this.pits.pitDataList.size(); i++){
@@ -373,9 +389,10 @@ public class WatershedDataset {
 		List<Point> pointsToResolve = new ArrayList<Point>();
 		// Adjust DEM elevations
 		for (int i = 0; i < firstPit.allPointsList.size(); i++) {
-			if (this.DEM[firstPit.allPointsList.get(i).y][firstPit.allPointsList.get(i).x] < firstPit.spilloverElevation) {
-				this.DEM[firstPit.allPointsList.get(i).y][firstPit.allPointsList.get(i).x] = firstPit.spilloverElevation;
-				Point pointToResolve = new Point(firstPit.allPointsList.get(i).x, firstPit.allPointsList.get(i).y);
+			if (this.Dem[firstPit.allPointsList.get(i).y][firstPit.allPointsList.get(i).x] < firstPit.spilloverElevation) {
+				this.Dem[firstPit.allPointsList.get(i).y][firstPit.allPointsList.get(i).x] = firstPit.spilloverElevation;
+				Point pointToResolve = firstPit.allPointsList.get(i);
+//				Point pointToResolve = new Point(firstPit.allPointsList.get(i).x, firstPit.allPointsList.get(i).y);
 				allPointsToResolve.add(pointToResolve);
 				//add each cell to a single flat flow direction cell object
 			}
@@ -393,7 +410,7 @@ public class WatershedDataset {
 						continue;
 					}
 					Point neighborPoint = new Point(currentPoint.x + x, currentPoint.y + y);
-					// check if the point is part of the flat area to be resolved, but not already on the list
+					// check if the point is part of the complete list to be resolved, but not already on the "next up" list
 					if (allPointsToResolve.contains(neighborPoint) && !pointsToResolve.contains(neighborPoint)) {
 						this.flowDirection[neighborPoint.y][neighborPoint.x].childPoint = currentPoint;
 						pointsToResolve.add(neighborPoint);
@@ -405,36 +422,81 @@ public class WatershedDataset {
 		}
 		return true;
 	}
-	
+
+
+
+
 	public Bitmap delineate(Point point) {
 		delineatedArea = 1;
-		int numrows = DEM.length;
-		int numcols = DEM[0].length;
+		int numrows = Dem.length;
+		int numcols = Dem[0].length;
 		int[] colorarray = new int[this.pits.pitIDMatrix.length*this.pits.pitIDMatrix[0].length];
 		Arrays.fill(colorarray, Color.TRANSPARENT);
 		Bitmap.Config config = Bitmap.Config.ARGB_8888;
 		Bitmap delinBitmap = Bitmap.createBitmap(colorarray, numcols, numrows, config);
 		delinBitmap = delinBitmap.copy(config, true);
 		List<Point> indicesToCheck = new ArrayList<Point>();
-//		indicesToCheck.add(point);
-		for (int x = -4; x < 5; x++) {
-			for (int y = -4; y < 5; y++) {
-				indicesToCheck.add(new Point(x+point.x, y + point.y));
-			}
-		}
+		indicesToCheck.add(point);
+		//		for (int x = -4; x < 5; x++) {
+		//			for (int y = -4; y < 5; y++) {
+		//				indicesToCheck.add(new Point(x+point.x, y + point.y));
+		//			}
+		//		}
 		while (!indicesToCheck.isEmpty()) {
+//			System.out.println("delineatefunction while list size" + Integer.toString(indicesToCheck.size()));
+			
 			int r = indicesToCheck.get(0).y;
 			int c = indicesToCheck.get(0).x;
-			delinBitmap.setPixel(numcols-c, r, Color.RED);
+//			System.out.println("r="+Integer.toString(r)+ " c=" + Integer.toString(c));
+			delinBitmap.setPixel(numcols - 1 - c, r, Color.RED);
 			indicesToCheck.remove(0);
 			delineatedArea++;
 			if (flowDirection[r][c].parentList.isEmpty()) {
 				continue;
 			}
 			for (int i = 0; i < flowDirection[r][c].parentList.size(); i++) {
+				if (delinBitmap.getPixel(numcols - 1 - flowDirection[r][c].parentList.get(i).x, flowDirection[r][c].parentList.get(i).y) == Color.RED) {
+//					Log.w("found repeat", flowDirection[r][c].parentList.get(i).toString());
+					continue;
+				}
 				indicesToCheck.add(flowDirection[r][c].parentList.get(i));
 			}
 		}
 		return delinBitmap;
-	}	
+	}
+
+	public void circulars() {
+		int numrows = Dem.length;
+		int numcols = Dem[0].length;
+		for (int r = 0; r < numrows; r++) {
+			for (int c = 0; c < numcols; c++) {
+				if (r >= numrows-1 || r <= 0 || c >= numcols-1 || c <= 0) {
+					continue;
+				}
+				Point currentPoint = new Point(r,c);
+				if (flowDirection[r][c].childPoint == null) {
+//					Log.w("A. null found at", currentPoint.toString());
+					continue;
+				}
+				if (flowDirection[r][c].childPoint.y == -1) {
+//					Log.w("B. pit bottom found at", currentPoint.toString());
+					continue;
+				}
+				if (flowDirection[flowDirection[r][c].childPoint.y][flowDirection[r][c].childPoint.x].childPoint == null) {
+					if (flowDirection[r][c].childPoint.y >= numrows-1 || flowDirection[r][c].childPoint.y <= 0 || flowDirection[r][c].childPoint.x >= numcols-1 || flowDirection[r][c].childPoint.x <= 0) {
+						continue;
+					} 
+//					Log.w("C. null found at this points child:", flowDirection[r][c].childPoint.toString());
+					continue;
+				}
+				if (flowDirection[flowDirection[r][c].childPoint.y][flowDirection[r][c].childPoint.x].childPoint.x == -1) {
+//					Log.w("D. pit bottom found at", flowDirection[r][c].childPoint.toString());
+					continue;
+				}
+				if (currentPoint == flowDirection[flowDirection[r][c].childPoint.y][flowDirection[r][c].childPoint.x].childPoint) {
+//					Log.w("E. Point to eachother", " current point=" + currentPoint.toString() + ", current child's child " +  flowDirection[flowDirection[r][c].childPoint.y][flowDirection[r][c].childPoint.x].childPoint.toString());
+				}
+			}
+		}	
+	}
 }

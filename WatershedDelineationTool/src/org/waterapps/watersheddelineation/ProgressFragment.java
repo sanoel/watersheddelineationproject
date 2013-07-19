@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,11 +17,11 @@ import android.widget.TextView;
 
 public class ProgressFragment extends Fragment{
 	private ProgressBar progressBar;
-	private TextView waitMessage;
+	private TextView loadMessage;
 	private TextView progressMessage;
+	private TextView previewMessage;
     private WatershedDataset watershedDataset;
 	ProgressFragmentListener pflistener;
-    WatershedDatasetListener listener;
 	
 	public interface ProgressFragmentListener {
 		public WatershedDataset ProgressFragmentGetData();
@@ -40,14 +41,12 @@ public class ProgressFragment extends Fragment{
 		if (activity instanceof ProgressFragmentListener) {
 			pflistener = (ProgressFragmentListener) activity;
 		}
-		if (activity instanceof WatershedDatasetListener) {
-			listener = (WatershedDatasetListener) activity;
-		}
 	}
-	
+//	Simulating
 	public void getData() {
 		watershedDataset = pflistener.ProgressFragmentGetData();
 		if(watershedDataset == null){
+			
 		} else {
 			new RunSimulation().execute(watershedDataset);
 		}
@@ -57,10 +56,12 @@ public class ProgressFragment extends Fragment{
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.progress_fragment, container, false);
-		waitMessage = (TextView) view.findViewById(R.id.progress_message);
-		waitMessage.setText("Here's what's coming...");
+		loadMessage = (TextView) view.findViewById(R.id.load_message);
+		loadMessage.setText("Loading...");
 		progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
 		ImageView catchmentsImage = (ImageView) view.findViewById(R.id.catchments_example_image);
+		previewMessage = (TextView) view.findViewById(R.id.preview_message);
+		previewMessage.setText("Here's what's coming...");
 		progressMessage = (TextView) view.findViewById(R.id.progress_status);
 		
 		return view;
@@ -76,9 +77,9 @@ public class ProgressFragment extends Fragment{
 			progressBar.setVisibility(View.VISIBLE);
 			progressMessage.setVisibility(View.VISIBLE);
 		}
-
 		protected WatershedDataset doInBackground(WatershedDataset... inputWds) {		 
 			// Background Work
+			inputWds[0].setTask(this);
 			if (inputWds[0].fillPits() != true) {
 			  // fillPits failed!
 			}
@@ -88,7 +89,7 @@ public class ProgressFragment extends Fragment{
 		@Override
 		protected void onProgressUpdate(String... values) {
 			progressBar.setProgress(Integer.parseInt(values[0]));
-			progressMessage.setText(values[1]);
+//			loadStatusMessage.setText(values[1]);
 		}
 
 		protected void onPostExecute(WatershedDataset result) {

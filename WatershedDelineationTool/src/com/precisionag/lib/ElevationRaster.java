@@ -22,7 +22,6 @@ public class ElevationRaster {
 	private LatLng upperRight;
     float lowerTenth;
     float upperTenth;
-	public float noDataVal;
 	
 	public ElevationRaster(int w, int h, float [][]data) {
 		setMinElevation(Float.POSITIVE_INFINITY);

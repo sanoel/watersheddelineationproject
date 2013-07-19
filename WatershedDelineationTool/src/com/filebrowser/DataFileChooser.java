@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -38,8 +39,7 @@ public class DataFileChooser extends ListActivity {
 
         private final DISPLAYMODE displayMode = DISPLAYMODE.RELATIVE;
         private List<DirectoryInfo> directories = new ArrayList<DirectoryInfo>();
-
-        private File currentDirectory = new File("/sdcard");
+        private File currentDirectory = Environment.getExternalStorageDirectory();
         private String returnIntent = "com.example.file_browser.MainActivity";
         @Override
         protected void onCreate(Bundle savedInstanceState) {

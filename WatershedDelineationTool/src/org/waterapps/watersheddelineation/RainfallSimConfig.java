@@ -5,7 +5,6 @@ public class RainfallSimConfig {
 	static double rainfallDepth = 1.0 * 0.0254; // cm
 	static double rainfallIntensity = rainfallDepth / rainfallDuration;
 	static double uniformDrainagePercentage = 0.5;
-	static double cellSize = 3; //meters
 	
 	static void setDepth(double depth) {
 	  RainfallSimConfig.rainfallDepth = depth * 0.0254; // convert inches to centimeters

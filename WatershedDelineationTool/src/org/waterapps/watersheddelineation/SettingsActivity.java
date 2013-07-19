@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.util.Log;
+
 import org.waterapps.watersheddelineation.R;
 
 import org.waterapps.watersheddelineation.MainActivity;
@@ -20,8 +22,19 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         MainActivity.prefs.registerOnSharedPreferenceChangeListener(this);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.context);
         preferences.edit().putBoolean("pref_key_fill_all", preferences.getBoolean("pref_key_fill_all", true)).commit();
+        boolean fillAllPits = preferences.getBoolean("pref_key_fill_all", true);
+        if (fillAllPits) {
+            Preference pref = findPreference("pref_rainfall_amount");
+            pref.setEnabled(false);
+        } else {
+            Preference pref = findPreference("pref_rainfall_amount");
+            pref.setEnabled(true);
+        }
         Preference preference = findPreference("pref_rainfall_amount");
-        preference.setSummary(preferences.getString("pref_rainfall_amount", "1.0")+"-Inch, 24-Hour Storm");
+        Log.w("settingsoncreate rainfall depth", Double.toString(RainfallSimConfig.rainfallDepth/0.0254));
+        Log.w("settingsoncreate - fill all?", Boolean.toString(MainActivity.watershedDataset.fillAllPits));
+
+        preference.setSummary(Double.toString(RainfallSimConfig.rainfallDepth/0.0254)+"-Inch, 24-Hour Storm");
     }
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
@@ -41,12 +54,12 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             int alpha = sharedPreferences.getInt(key, 50);
             MainActivity.setDemAlpha(1 - (float) alpha / 100.0f);
         } else if (key.equals("pref_rainfall_amount")) {
-        	RainfallSimConfig.rainfallDepth = Double.parseDouble(sharedPreferences.getString("pref_rainfall_amount", "100.0"));
+        	RainfallSimConfig.setDepth(Double.parseDouble(sharedPreferences.getString("pref_rainfall_amount", "100.0")));
         	Preference pref = findPreference("pref_rainfall_amount");
             pref.setSummary(sharedPreferences.getString("pref_rainfall_amount", "1.0")+"-Inch, 24-Hour Storm");
         } else if (key.equals("pref_key_catchments_trans_level")) {
             int alpha = sharedPreferences.getInt(key, 50);
-            MainActivity.setCatchmentsAlpha(1 - (float) alpha / 100.0f);        
+            MainActivity.setCatchmentsAlpha(1 - (float) alpha / 100.0f);     
         }
     }
 }
