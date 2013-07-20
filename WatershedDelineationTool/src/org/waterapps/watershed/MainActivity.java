@@ -1,4 +1,4 @@
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
 import static android.graphics.Color.HSVToColor;
 
@@ -10,6 +10,9 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Iterator;
+
+import com.filebrowser.DataFileChooser;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -23,15 +26,17 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import org.waterapps.watersheddelineation.R;
-import org.waterapps.watersheddelineation.ProgressFragment.ProgressFragmentListener;
-import org.waterapps.watersheddelineation.ResultsPanelFragment.ResultsPanelFragmentListener;
+
+import org.waterapps.watershed.HelpActivity;
+import org.waterapps.watershed.R;
+import org.waterapps.watershed.ProgressFragment.ProgressFragmentListener;
+import org.waterapps.watershed.ResultsPanelFragment.ResultsPanelFragmentListener;
 
 import com.precisionag.lib.*;
 import com.tiffdecoder.TiffDecoder;
 
-import org.waterapps.watersheddelineation.HelpActivity;
 
 import android.location.LocationManager;
 import android.net.Uri;
@@ -64,7 +69,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	GroundOverlay delinOverlay;
 	LocationManager locationManager;
 	private static Menu myMenu = null;
-	static String demDirectory = "/dem";
+	public static String demDirectory = "/dem";
 	static float alpha;
 	public static int hsvColors[];
 	public static int hsvTransparentColors[];
@@ -106,12 +111,15 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	private boolean firstStart;
 	private static final int FIRST_START = 42;
 	private static final int INITIAL_LOAD = 6502;
+	static ArrayList<Polyline> demOutlines;
+	public static LatLngBounds demBounds;
 
 
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		demOutlines = new ArrayList<Polyline>();
 		setContentView(R.layout.main_activity);
 		SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 		map = mapFragment.getMap();
@@ -184,6 +192,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		delineateButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
+				getActionBar().setTitle("Watershed Delineation");
 				delineationPoint = field.getXYFromLatLng(delineationMarker.getPosition());
 //				Log.w("delineatePoint", delineationPoint.toString());
 //				delineationPoint = new Point(35,142);
@@ -291,7 +300,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		myMenu = menu;
 		// Make an action bar and don't display the app title
 		ActionBar actionBar = getActionBar();
-		actionBar.setTitle("Watershed Delineation Tool");
+		actionBar.setTitle("Watershed Delineation");
 		return true;
 	}
 
@@ -299,14 +308,14 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Choose DEM Menu Item
 		if (item.getItemId() == R.id.menu_choose_dem) {
-			Intent i = new Intent("com.filebrowser.DataFileChooser");
+			Intent i = new Intent(this, DataFileChooser.class);
             i.putExtra("path", demDirectory);
 			startActivityForResult(i, 1);
 			return true;
 		}  else if (item.getItemId() == R.id.menu_settings) {
 			Bundle data = new Bundle();
 			data.putString("returnIntent", "back"); //After choose return back to this
-			Intent i = new Intent("org.waterapps.watersheddelineation.SettingsActivity");
+			Intent i = new Intent(this, SettingsActivity.class);
 			i.putExtras(data);
 			startActivity(i);
 			return true;
@@ -349,6 +358,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		MainActivity.watershedDataset = watershedDataset;
 		hideProgressFragment();
 		getActionBar().show();
+		getActionBar().setTitle("Watershed Delineation");
 		//Show the pits on the field
 		pitsOverlay = map.addGroundOverlay(new GroundOverlayOptions()
 		.image(BitmapDescriptorFactory.fromBitmap(watershedDataset.pits.pitsBitmap))
@@ -584,43 +594,46 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		}
 	}
 
-	public static void scanDEMs() {
+	//looks through contents of DEM directory and displays outlines of all DEMs there
+    public static void scanDEMs() {
         //scan DEM directory
         String path = demDirectory;
         DemFile dem;
         dems = new ArrayList<DemFile>();
+        Log.i("Files", "Path: " + path);
         File f = new File(path);
+        Polyline outline;
+        demOutlines = new ArrayList<Polyline>();
+
         if (f.isDirectory()) {
             File file[] = f.listFiles();
+            Log.i("File", file.toString());
 
             for (int i=0; i < file.length; i++)
             {
+                Log.d("Files", "FileName:" + file[i].getName());
                 dem = ReadGeoTiffMetadata.readMetadata(file[i]);
+                if(i==0) {
+                    demBounds = new LatLngBounds(new LatLng(dem.getSw_lat(), dem.getSw_long()),
+                            new LatLng(dem.getNe_lat(), dem.getNe_long()));
+                }
                 dems.add(dem);
-                map.addPolyline(new PolylineOptions().add(new LatLng(dem.getSw_lat(), dem.getSw_long()))
+                demOutlines.add(map.addPolyline(new PolylineOptions().add(new LatLng(dem.getSw_lat(), dem.getSw_long()))
                         .add(new LatLng(dem.getSw_lat(), dem.getNe_long()))
                         .add(new LatLng(dem.getNe_lat(), dem.getNe_long()))
                         .add(new LatLng(dem.getNe_lat(), dem.getSw_long()))
                         .add(new LatLng(dem.getSw_lat(), dem.getSw_long()))
-                        .color(Color.RED));
-            }
-        }
-    }
-	public void setCurrentlyLoaded(String filename) {
-        DemFile dem;
-        for(int i = 0; i<dems.size(); i++) {
-            dem = dems.get(i);
-//            Log.d("filename", filename);
-//            Log.d("dem filename", dem.getFilename());
-            if (filename.equals(dem.getFilename())) {
-                currentlyLoaded = dem;
+                        .color(Color.RED)));
+                demBounds = demBounds.including(new LatLng(dem.getSw_lat(), dem.getSw_long()));
+                demBounds = demBounds.including(new LatLng(dem.getNe_lat(), dem.getNe_long()));
             }
         }
     }
 	
-	public void loadInitialDEM() {
+	//picks which DEM to load upon app start
+    public void loadInitialDEM() {
         //attempt to load last used DEM, if it still exists
-//        Log.d("demfilename", prefs.getString("last_dem", "foo"));
+        Log.d("demfilename", prefs.getString("last_dem", "foo"));
         File demFile = new File(prefs.getString("last_dem", "foo"));
         if(demFile.isFile()) {
             ElevationRaster raster = new ElevationRaster();
@@ -670,19 +683,21 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
             }
             //if multiple TIFFs, let user choose
             else {
-                Intent intent = new Intent(context, com.filebrowser.DataFileChooser.class);
+                Intent intent = new Intent("com.filebrowser.DataFileChooserWaterplane");
                 intent.putExtra("path", demDirectory);
                 startActivityForResult(intent, INITIAL_LOAD);
             }
         }
     }
-
+    
+    //copies a file from assets to SD
     private void copyAssets() {
         AssetManager assetManager = getAssets();
+        String[] files = null;
         try {
-            assetManager.list("");
+            files = assetManager.list("");
         } catch (IOException e) {
-//            Log.e("tag", "Failed to get asset file list.", e);
+            Log.e("tag", "Failed to get asset file list.", e);
         }
         String filename = "Feldun.tif";
             InputStream in = null;
@@ -698,14 +713,28 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
                 out.close();
                 out = null;
             } catch(IOException e) {
-//                Log.e("tag", "Failed to copy asset file: " + filename, e);
+                Log.e("tag", "Failed to copy asset file: " + filename, e);
             }
         }
+
     private void copyFile(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[1024];
         int read;
         while((read = in.read(buffer)) != -1){
             out.write(buffer, 0, read);
+        }
+    }
+
+    //tell app which DEM is currently loaded, so it isn't reloaded if clicked on
+    public void setCurrentlyLoaded(String filename) {
+        DemFile dem;
+        for(int i = 0; i<dems.size(); i++) {
+            dem = dems.get(i);
+            Log.d("filename", filename);
+            Log.d("dem filename", dem.getFilename());
+            if (filename.equals(dem.getFilename())) {
+                currentlyLoaded = dem;
+            }
         }
     }
     
@@ -721,6 +750,14 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
         return juri;
     }
 
+  //remove polylines showing DEM outlines, for use when DEM folder is changed
+    public static void removeDemOutlines() {
+        Iterator<Polyline> outlines = demOutlines.iterator();
+        while(outlines.hasNext()) {
+            outlines.next().remove();
+        }
+    }
+    
 	@Override
 	public void onMarkerDrag(Marker marker) {
 	}

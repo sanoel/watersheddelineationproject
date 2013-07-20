@@ -5,7 +5,7 @@
  * should not be modified by hand.
  */
 
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
 public final class Manifest {
     public static final class permission {

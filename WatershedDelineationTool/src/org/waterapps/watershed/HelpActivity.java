@@ -1,4 +1,4 @@
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import org.waterapps.watershed.R;
 
 /**
  * Created by steve on 7/15/13.

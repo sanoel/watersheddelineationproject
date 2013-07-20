@@ -1,4 +1,4 @@
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -13,7 +13,7 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
-import org.waterapps.watersheddelineation.R;
+import org.waterapps.watershed.R;
 
 public class SeekBarPreference extends Preference implements OnSeekBarChangeListener {
 	

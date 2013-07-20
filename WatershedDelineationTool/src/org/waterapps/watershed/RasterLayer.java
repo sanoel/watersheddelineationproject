@@ -1,4 +1,4 @@
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
 import android.graphics.Bitmap;
 import android.util.Log;

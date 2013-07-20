@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.waterapps.watersheddelineation"
+    package="org.waterapps.watershed"
     android:versionCode="2"
     android:versionName="1.0.1" >
 
@@ -26,11 +26,11 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/watershedelineation"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="org.waterapps.watersheddelineation.MainActivity"
+            android:name="org.waterapps.watershed.MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/app_name" >
             <intent-filter>
@@ -58,7 +58,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="org.waterapps.watersheddelineation.AppPreferenceActivity"
+            android:name="org.waterapps.watershed.AppPreferenceActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="org.openintents.action.PICK_FILE" />
@@ -67,19 +67,19 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="org.waterapps.watersheddelineation.SettingsActivity"
+            android:name="org.waterapps.watershed.SettingsActivity"
             android:label="@string/app_name" >
             <intent-filter>
-                <action android:name="org.waterapps.watersheddelineation.SettingsActivity" />
+                <action android:name="org.waterapps.watershed.SettingsActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <activity
-            android:name="org.waterapps.watersheddelineation.HelpActivity"
+            android:name="org.waterapps.watershed.HelpActivity"
             android:label="Waterplane Help" >
             <intent-filter>
-                <action android:name="org.waterapps.watersheddelineation.HelpActivity" />
+                <action android:name="org.waterapps.watershed.HelpActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -90,6 +90,7 @@
             android:value="AIzaSyCOnGJff5um2ToqO4aRvfxt9yJsis-gwCo" />
         <!-- release maps api key used AIzaSyALXAGA6DCOP8gON_HNYZa8QRx_OK8H_uc -->
         <!-- debug maps api key used   AIzaSyCOnGJff5um2ToqO4aRvfxt9yJsis-gwCo -->
+        <!-- release - watermgmtapps accnt maps api key used AIzaSyDDKrvVBqzb5MzNKDJFNYMkA4mxWKIw_vw   -->
     </application>
 
 </manifest>

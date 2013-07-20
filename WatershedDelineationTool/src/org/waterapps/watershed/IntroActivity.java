@@ -1,4 +1,4 @@
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
 import android.app.Activity;
 import android.graphics.BitmapFactory;
@@ -9,6 +9,7 @@ import android.view.View;
 import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.Toast;
+import org.waterapps.watershed.R;
 
 /**
  * Created by steve on 7/18/13.

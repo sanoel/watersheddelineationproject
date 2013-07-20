@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.waterapps.watersheddelineation.MainActivity;
+import org.waterapps.watershed.MainActivity;
 
 public class Field {
 	//bitmap represents rasterized elevation data

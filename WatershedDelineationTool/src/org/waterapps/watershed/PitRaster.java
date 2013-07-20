@@ -1,10 +1,10 @@
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.waterapps.watersheddelineation.WatershedDataset.WatershedDatasetListener;
+import org.waterapps.watershed.WatershedDataset.WatershedDatasetListener;
 
 
 import android.graphics.Bitmap;

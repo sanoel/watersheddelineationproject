@@ -8,16 +8,19 @@
 <h1>Help</h1>
 <h2><a href="intro-url">Intro Screen</a></h2>
 <h2>About the app</h2>
-<p>The purpose of this app is to provide a visualization of DEM files loaded on your SD card. If there are none, a sample file will be loaded. A slider at the bottom lets you set the elevation, below which everything will be shaded in. This is handy for quickly finding the lowest and highest points in an area.</p>
+<p>The purpose of this app is to assist users with watershed delineation and visualization while in the field.  Watershed delineation is the act of finding the contributing area that flows to a point and drawing, or delineating, that area with a polygon.  Although many usage scenarios are possible, understand that this app is not intended for large-scale watershed analyses and is not currently capable of handling vast land areas (i.e. delineating in a stream).</p>
 <h2><a href="HowtoloadDEMs.html">How to get DEMs</a></h2>
-<h2>Markers</h2>
-<p>To add a marker, click the 'Add Marker' button in the top right corner then tap on the map. They can be dragged, removed, or have their text visibility toggled.</p>
-<h2>Location Tracking</h2>
-<p>When enabled, your location is set by GPS. When disabled, it is set by a draggable marker.</p>
-<h2>Follow Elevation</h2>
-<p>When this mode is enabled the water level will be set to match your current elevation. </p>
-<h2>Drawing Modes</h2>
-<p>The DEM can be displayed as all blue or with a color gradient, with optional transparency for both. The transparency level can be adjusted in the settings menu.</p>
+<p>After DEMs have been acquired (link above), they may be used in the app. Upon opening the app, a DEM must be selected.  After selecting a DEM, a different DEM may be chosen via the Action Bar Overflow Menu > Choose DEM. Alternatively, all DEMs in the dem folder are displayed on the map with a red polygon around them.  Simply click the polygon to load the DEM.  The folder that accesses these DEM files may be respecified by goin to Settings > Choose DEM Folder.   </p>
+<h2>Simulate Rainfall Button</h2>
+<p>This button simulates the desired rainfall event. To adjust the rainfall event to be simulated, go to Setting and adjust the value under Rainfall Event Settings.</p>
+<h2>Rainfall Event Settings</h2>
+The "Fill all pits" checkbox refers to a standard function on GIS software, but for more advanced adjustment, specify a rainfall event to be simulated.  Edit this field with a rainfall amount in inches. 
+<h2>Catchment Map</h2>
+<p>After the rainfall event has been simulated by clicking the Simulate Rainfall button, a map of watersheds (or catchments/subcatchments) is produced.  Polygons represent areas that drains internally while areas not delineated by a polygon drain off of the map.  If no polygons exist, then the entire area drains off of the map and elsewhere.  The "Fill all depressions" button guarantees complete drainage; rainfall continues until all puddles fill up, and overflow off of map.</p>
+<h2>Delineation</h2>
+<p>After rainfall has been simulated and the catchment map has been shown, a marker appears so that the user may begin to delineate watersheds at specific locations.  Simple drag this marker to the desired location and click the Delineate button.  The contributing area will be delineated on the map and colored in red while the area of that polygon will be shown on the Results panel.</p>
+<h2>Other Settings</h2>
+<p>Through the Settings screen, transparency levels of the DEM and the catchments/delineated areas may be adjusted using the sliders.  These layers may also be turned on or off at any time using the check boxes on the Action Bar Overflow Menu.</p>
 
 
 </body>

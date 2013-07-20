@@ -1,7 +1,7 @@
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
-import org.waterapps.watersheddelineation.R;
-import org.waterapps.watersheddelineation.WatershedDataset.WatershedDatasetListener;
+import org.waterapps.watershed.R;
+import org.waterapps.watershed.WatershedDataset.WatershedDatasetListener;
 
 import android.app.Activity;
 import android.os.AsyncTask;

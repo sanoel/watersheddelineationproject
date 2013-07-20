@@ -1,4 +1,4 @@
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
 public class RainfallSimConfig {
 	static double rainfallDuration = 24.0; // hours

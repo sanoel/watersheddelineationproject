@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
+import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,8 +26,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.waterapps.watersheddelineation.MainActivity;
-import org.waterapps.watersheddelineation.R;
+import org.waterapps.watershed.MainActivity;
+import org.waterapps.watershed.R;
+import org.waterapps.watershed.SettingsActivity;
 
 public class DataPathChooser extends ListActivity {
 	private enum DISPLAYMODE {
@@ -35,7 +38,7 @@ public class DataPathChooser extends ListActivity {
 	private final DISPLAYMODE displayMode = DISPLAYMODE.RELATIVE;
 	private List<DirectoryInfo> directories = new ArrayList<DirectoryInfo>();
 
-	private File currentDirectory = new File("/sdcard");
+	private File currentDirectory = Environment.getExternalStorageDirectory();
 	private String returnIntent = "com.example.file_browser.MainActivity";
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +48,9 @@ public class DataPathChooser extends ListActivity {
 		if (data != null && data.containsKey("path")) {
 			File current = new File(data.getString("path"));
 			File startDir = new File(current.getAbsolutePath());
-			Toast message3 = Toast.makeText(getApplicationContext(), "Path:"
-					+ startDir.toString(), Toast.LENGTH_SHORT);
-			message3.show();
+			//Toast message3 = Toast.makeText(getApplicationContext(), "Path:"
+			//		+ startDir.toString(), Toast.LENGTH_SHORT);
+			//message3.show();
 			if (startDir.exists() && startDir.isDirectory()) {
 				this.browseTo(startDir);
 			} else {
@@ -85,9 +88,11 @@ public class DataPathChooser extends ListActivity {
 			SharedPreferences.Editor editor = prefs.edit();
 			editor.putString("dataPath", currentDirectory.getPath() + "/");
             editor.putString("dem_dir", currentDirectory.getPath() + "/");
+            MainActivity.demDirectory = currentDirectory.getPath() + "/";
+            MainActivity.removeDemOutlines();
             MainActivity.scanDEMs();
-            Log.d("dem dir", currentDirectory.toString());
-			editor.commit();
+            editor.commit();
+            SettingsActivity.updateDemFolder();
 			if(returnIntent.contentEquals("back") == false){
 				Intent i2 = new Intent(returnIntent);
 				//startActivity(i2);
@@ -102,7 +107,7 @@ public class DataPathChooser extends ListActivity {
 	 * This function browses to the root-directory of the file-system.
 	 */
 	private void browseToRoot() {
-		browseTo(new File("/"));
+		browseTo(Environment.getExternalStorageDirectory());
 		this.setTitle("/");
 	}
 

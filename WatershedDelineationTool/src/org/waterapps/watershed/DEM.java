@@ -1,4 +1,4 @@
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
 import java.io.BufferedReader;
 import java.io.IOException;

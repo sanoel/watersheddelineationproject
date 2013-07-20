@@ -22,27 +22,33 @@
     <PreferenceCategory
         android:key="pref_vis_settings"
         android:title="Visualization Settings" >
-        <org.waterapps.watersheddelineation.SeekBarPreference
+        <org.waterapps.watershed.SeekBarPreference
             android:defaultValue="50"
             android:key="pref_key_dem_trans_level"
             android:max="100"
             android:title="DEM Transparency Level"
             robobunny:min="10" />
-        <org.waterapps.watersheddelineation.SeekBarPreference
+        <org.waterapps.watershed.SeekBarPreference
             android:defaultValue="50"
             android:key="pref_key_catchments_trans_level"
             android:max="100"
             android:title="Catchments Transparency Level"
             robobunny:min="10" />
     </PreferenceCategory>
-
-    <org.waterapps.watersheddelineation.MyDialogPreference
-        android:key="pref_legal"
-        android:title="Legal Notice" />
-
     <Preference android:title="Choose DEM Folder" >
         android:key="
         <intent android:action="com.filebrowser.DataPathChooser" />
     </Preference>
+<PreferenceCategory
+        android:key="pref_legal"
+        android:title="Legal" >
+    
+    <org.waterapps.watershed.GMapsLegalDialog
+        android:key="pref_legal"
+        android:title="Google Maps Legal Notice" />
 
+    <org.waterapps.watershed.LicenceDialog
+        android:key="pref_licence"
+        android:title="Licence" />
+</PreferenceCategory>
 </PreferenceScreen>

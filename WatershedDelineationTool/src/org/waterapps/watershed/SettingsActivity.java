@@ -1,4 +1,4 @@
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -7,14 +7,16 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import org.waterapps.watersheddelineation.R;
+import org.waterapps.watershed.MainActivity;
+import org.waterapps.watershed.R;
 
-import org.waterapps.watersheddelineation.MainActivity;
 
 /**
  * Created by steve on 6/27/13.
  */
 public class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+    static Preference demDirPref;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,8 +35,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         Preference preference = findPreference("pref_rainfall_amount");
         Log.w("settingsoncreate rainfall depth", Double.toString(RainfallSimConfig.rainfallDepth/0.0254));
         Log.w("settingsoncreate - fill all?", Boolean.toString(MainActivity.watershedDataset.fillAllPits));
-
         preference.setSummary(Double.toString(RainfallSimConfig.rainfallDepth/0.0254)+"-Inch, 24-Hour Storm");
+//        preference = findPreference("dem_dir");
+//        demDirPref = preference;
+//        preference.setSummary(preferences.getString("dem_dir", "/dem"));
     }
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
@@ -61,5 +65,9 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             int alpha = sharedPreferences.getInt(key, 50);
             MainActivity.setCatchmentsAlpha(1 - (float) alpha / 100.0f);     
         }
+    }
+    public static void updateDemFolder() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.context);
+        demDirPref.setSummary(preferences.getString("dem_dir", "/dem"));
     }
 }

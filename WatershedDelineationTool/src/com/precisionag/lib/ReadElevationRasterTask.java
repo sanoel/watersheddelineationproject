@@ -2,7 +2,7 @@ package com.precisionag.lib;
 
 import java.net.URI;
 
-import org.waterapps.watersheddelineation.MainActivity;
+import org.waterapps.watershed.MainActivity;
 
 
 import android.content.SharedPreferences;

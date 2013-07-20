@@ -1,6 +1,7 @@
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
-import org.waterapps.watersheddelineation.ProgressFragment.ProgressFragmentListener;
+import org.waterapps.watershed.R;
+import org.waterapps.watershed.ProgressFragment.ProgressFragmentListener;
 
 import android.app.Activity;
 import android.os.Bundle;

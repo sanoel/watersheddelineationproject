@@ -2,10 +2,8 @@
 <resources>
 
     <string name="app_name">Watershed Delineation</string>
-    <string name="menu_settings">Simulation Settings</string>
+    <string name="menu_settings">Settings</string>
     <string name="delineate_button">Simulate Rainfall</string>
-    <string name="load_dem_button">Load DEM</string>
-    <string name="progress_message">This may take a moment...</string>
     <string name="rainfall_settings_title">Rainfall Event Settings</string>
     
 </resources>

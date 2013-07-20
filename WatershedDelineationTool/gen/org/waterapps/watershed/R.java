@@ -5,7 +5,7 @@
  * should not be modified by hand.
  */
 
-package org.waterapps.watersheddelineation;
+package org.waterapps.watershed;
 
 public final class R {
     public static final class attr {
@@ -143,16 +143,16 @@ containing a value of this type.
         public static final int catchments_example=0x7f020001;
         public static final int collections_collection=0x7f020002;
         public static final int file=0x7f020003;
-        public static final int ic_launcher=0x7f020004;
-        public static final int intro=0x7f020005;
-        public static final int navigation_back=0x7f020006;
+        public static final int intro=0x7f020004;
+        public static final int navigation_back=0x7f020005;
+        public static final int watershedelineation=0x7f020006;
     }
     public static final class id {
-        public static final int area=0x7f050015;
+        public static final int area=0x7f050016;
         public static final int button_delineate=0x7f05000c;
         public static final int button_simulate=0x7f05000b;
         public static final int catchments_example_image=0x7f050013;
-        public static final int depression_storage=0x7f050016;
+        public static final int depression_storage=0x7f050017;
         public static final int directoryIcon=0x7f050006;
         public static final int directoryName=0x7f050009;
         public static final int fileIcon=0x7f050007;
@@ -160,16 +160,16 @@ containing a value of this type.
         public static final int imageView=0x7f050005;
         public static final int load_message=0x7f050011;
         public static final int map=0x7f05000a;
-        public static final int menuCancel=0x7f05001c;
-        public static final int menuDone=0x7f050024;
-        public static final int menuSelect=0x7f05001b;
-        public static final int menu_catchments=0x7f050022;
-        public static final int menu_center=0x7f050020;
-        public static final int menu_choose_dem=0x7f05001e;
-        public static final int menu_dem=0x7f050021;
-        public static final int menu_exit_help=0x7f05001d;
-        public static final int menu_help=0x7f050023;
-        public static final int menu_settings=0x7f05001f;
+        public static final int menuCancel=0x7f05001d;
+        public static final int menuDone=0x7f050025;
+        public static final int menuSelect=0x7f05001c;
+        public static final int menu_catchments=0x7f050023;
+        public static final int menu_center=0x7f050021;
+        public static final int menu_choose_dem=0x7f05001f;
+        public static final int menu_dem=0x7f050022;
+        public static final int menu_exit_help=0x7f05001e;
+        public static final int menu_help=0x7f050024;
+        public static final int menu_settings=0x7f050020;
         public static final int none=0x7f050000;
         public static final int normal=0x7f050001;
         public static final int preview_message=0x7f050012;
@@ -178,11 +178,12 @@ containing a value of this type.
         public static final int progress_message=0x7f05000e;
         public static final int progress_status=0x7f050014;
         public static final int results_fragment_container=0x7f050010;
+        public static final int results_title=0x7f050015;
         public static final int satellite=0x7f050002;
-        public static final int seekBarPrefBarContainer=0x7f05001a;
-        public static final int seekBarPrefUnitsLeft=0x7f050019;
-        public static final int seekBarPrefUnitsRight=0x7f050017;
-        public static final int seekBarPrefValue=0x7f050018;
+        public static final int seekBarPrefBarContainer=0x7f05001b;
+        public static final int seekBarPrefUnitsLeft=0x7f05001a;
+        public static final int seekBarPrefUnitsRight=0x7f050018;
+        public static final int seekBarPrefValue=0x7f050019;
         public static final int terrain=0x7f050003;
         public static final int upIcon=0x7f050008;
     }
@@ -265,10 +266,8 @@ containing a value of this type.
          */
         public static final int common_signin_button_text_long=0x7f06000d;
         public static final int delineate_button=0x7f060013;
-        public static final int load_dem_button=0x7f060014;
         public static final int menu_settings=0x7f060012;
-        public static final int progress_message=0x7f060015;
-        public static final int rainfall_settings_title=0x7f060016;
+        public static final int rainfall_settings_title=0x7f060014;
     }
     public static final class style {
         /** 
@@ -308,20 +307,20 @@ containing a value of this type.
            <colgroup align="left" />
            <colgroup align="left" />
            <tr><th>Attribute</th><th>Description</th></tr>
-           <tr><td><code>{@link #MapAttrs_cameraBearing org.waterapps.watersheddelineation:cameraBearing}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_cameraTargetLat org.waterapps.watersheddelineation:cameraTargetLat}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_cameraTargetLng org.waterapps.watersheddelineation:cameraTargetLng}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_cameraTilt org.waterapps.watersheddelineation:cameraTilt}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_cameraZoom org.waterapps.watersheddelineation:cameraZoom}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_mapType org.waterapps.watersheddelineation:mapType}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_uiCompass org.waterapps.watersheddelineation:uiCompass}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_uiRotateGestures org.waterapps.watersheddelineation:uiRotateGestures}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_uiScrollGestures org.waterapps.watersheddelineation:uiScrollGestures}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_uiTiltGestures org.waterapps.watersheddelineation:uiTiltGestures}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_uiZoomControls org.waterapps.watersheddelineation:uiZoomControls}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_uiZoomGestures org.waterapps.watersheddelineation:uiZoomGestures}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_useViewLifecycle org.waterapps.watersheddelineation:useViewLifecycle}</code></td><td></td></tr>
-           <tr><td><code>{@link #MapAttrs_zOrderOnTop org.waterapps.watersheddelineation:zOrderOnTop}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_cameraBearing org.waterapps.watershed:cameraBearing}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_cameraTargetLat org.waterapps.watershed:cameraTargetLat}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_cameraTargetLng org.waterapps.watershed:cameraTargetLng}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_cameraTilt org.waterapps.watershed:cameraTilt}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_cameraZoom org.waterapps.watershed:cameraZoom}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_mapType org.waterapps.watershed:mapType}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_uiCompass org.waterapps.watershed:uiCompass}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_uiRotateGestures org.waterapps.watershed:uiRotateGestures}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_uiScrollGestures org.waterapps.watershed:uiScrollGestures}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_uiTiltGestures org.waterapps.watershed:uiTiltGestures}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_uiZoomControls org.waterapps.watershed:uiZoomControls}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_uiZoomGestures org.waterapps.watershed:uiZoomGestures}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_useViewLifecycle org.waterapps.watershed:useViewLifecycle}</code></td><td></td></tr>
+           <tr><td><code>{@link #MapAttrs_zOrderOnTop org.waterapps.watershed:zOrderOnTop}</code></td><td></td></tr>
            </table>
            @see #MapAttrs_cameraBearing
            @see #MapAttrs_cameraTargetLat
@@ -345,7 +344,7 @@ containing a value of this type.
             0x7f01000c, 0x7f01000d
         };
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#cameraBearing}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#cameraBearing}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -359,7 +358,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_cameraBearing = 1;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#cameraTargetLat}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#cameraTargetLat}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -373,7 +372,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_cameraTargetLat = 2;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#cameraTargetLng}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#cameraTargetLng}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -387,7 +386,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_cameraTargetLng = 3;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#cameraTilt}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#cameraTilt}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -401,7 +400,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_cameraTilt = 4;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#cameraZoom}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#cameraZoom}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -415,7 +414,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_cameraZoom = 5;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#mapType}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#mapType}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -435,7 +434,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_mapType = 0;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#uiCompass}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#uiCompass}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -449,7 +448,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_uiCompass = 6;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#uiRotateGestures}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#uiRotateGestures}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -463,7 +462,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_uiRotateGestures = 7;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#uiScrollGestures}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#uiScrollGestures}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -477,7 +476,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_uiScrollGestures = 8;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#uiTiltGestures}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#uiTiltGestures}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -491,7 +490,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_uiTiltGestures = 9;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#uiZoomControls}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#uiZoomControls}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -505,7 +504,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_uiZoomControls = 10;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#uiZoomGestures}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#uiZoomGestures}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -519,7 +518,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_uiZoomGestures = 11;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#useViewLifecycle}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#useViewLifecycle}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 
@@ -533,7 +532,7 @@ containing a value of this type.
         */
         public static final int MapAttrs_useViewLifecycle = 12;
         /**
-          <p>This symbol is the offset where the {@link org.waterapps.watersheddelineation.R.attr#zOrderOnTop}
+          <p>This symbol is the offset where the {@link org.waterapps.watershed.R.attr#zOrderOnTop}
           attribute's value can be found in the {@link #MapAttrs} array.
 
 

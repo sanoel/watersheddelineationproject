@@ -1,8 +1,8 @@
 package com.precisionag.lib;
 
-import org.waterapps.watersheddelineation.MainActivity;
-import org.waterapps.watersheddelineation.WatershedDataset;
-import org.waterapps.watersheddelineation.WatershedDataset.WatershedDatasetListener;
+import org.waterapps.watershed.MainActivity;
+import org.waterapps.watershed.WatershedDataset;
+import org.waterapps.watershed.WatershedDataset.WatershedDatasetListener;
 
 import com.tiffdecoder.TiffDecoder;
 
@@ -45,8 +45,6 @@ public class LoadWatershedDatasetTask extends AsyncTask <String, String, Watersh
 		MainActivity.wsdProgressText.setVisibility(View.GONE);
 		MainActivity.watershedDataset = result;
 		MainActivity.simulateButton.setEnabled(true);
-		Toast toast = Toast.makeText(MainActivity.context, Integer.toString(result.noDataCellsRemoved) + " total NoData cells removed from the DEM.", Toast.LENGTH_LONG);
-		toast.show();
 	}
 
 	public void watershedDatasetOnProgress(int progress, String status) {
