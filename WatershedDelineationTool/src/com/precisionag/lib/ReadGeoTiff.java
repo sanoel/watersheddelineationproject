@@ -1,14 +1,10 @@
 package com.precisionag.lib;
 
-import android.util.Log;
-
 import com.google.android.gms.maps.model.LatLng;
 import com.tiffdecoder.TiffDecoder;
 
-import java.io.File;
 import java.net.URI;
 
-import static com.tiffdecoder.TiffDecoder.nativeTiffGetCornerLatitude;
 import com.ibm.util.CoordinateConversion;
 
 /**
@@ -43,17 +39,16 @@ public class ReadGeoTiff implements ReadElevationRaster {
             }
         }
 
-        Log.i("min elevation", Float.toString(raster.getMinElevation()));
-        Log.i("max elevation", Float.toString(raster.getMaxElevation()));
+//        Log.i("max elevation", Float.toString(raster.getMaxElevation()));
         //float []anchor = nativeTiffGetCornerLatitude();
         float longitude = TiffDecoder.nativeTiffGetCornerLongitude();
         float latitude = TiffDecoder.nativeTiffGetCornerLatitude();
         double latLng[];
         CoordinateConversion conversion = new CoordinateConversion();
         String UTM = TiffDecoder.nativeTiffGetParams();
-        Log.d("params", UTM);
+//        Log.d("params", UTM);
         String UTMZone = UTM.substring(18, 20).concat(" ").concat(UTM.substring(20, 21)).concat(" ");
-        Log.d("utmzone", UTMZone);
+//        Log.d("utmzone", UTMZone);
         latLng = conversion.utm2LatLon(UTMZone + Integer.toString((int)longitude) + " " + Integer.toString((int)latitude));
         double scaleX = TiffDecoder.nativeTiffGetScaleX();
         double scaleY = TiffDecoder.nativeTiffGetScaleY();

@@ -9,6 +9,6 @@ package org.waterapps.watershed;
 
 public final class Manifest {
     public static final class permission {
-        public static final String MAPS_RECEIVE="org.waterapps.watersheddelineation.permission.MAPS_RECEIVE";
+        public static final String MAPS_RECEIVE="org.waterapps.watershed.permission.MAPS_RECEIVE";
     }
 }

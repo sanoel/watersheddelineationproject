@@ -4,14 +4,17 @@ import org.waterapps.watershed.MainActivity;
 import org.waterapps.watershed.WatershedDataset;
 import org.waterapps.watershed.WatershedDataset.WatershedDatasetListener;
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.tiffdecoder.TiffDecoder;
 
 
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
-public class LoadWatershedDatasetTask extends AsyncTask <String, String, WatershedDataset> implements WatershedDatasetListener {
+public class LoadWatershedDatasetTask extends AsyncTask <String, Object, WatershedDataset> implements WatershedDatasetListener {
 	float[][] DEM;
 	
 	public LoadWatershedDatasetTask(ElevationRaster raster) {
@@ -34,9 +37,9 @@ public class LoadWatershedDatasetTask extends AsyncTask <String, String, Watersh
 	}
 
 	@Override
-	protected void onProgressUpdate(String... values) {
-		MainActivity.wsdProgressBar.setProgress(Integer.parseInt(values[0]));
-		MainActivity.wsdProgressText.setText(values[1]);
+	protected void onProgressUpdate(Object... values) {
+		MainActivity.wsdProgressBar.setProgress((Integer) values[0]);
+		MainActivity.wsdProgressText.setText((String) values[1]);
 	}
 
 	protected void onPostExecute(WatershedDataset result) {
@@ -45,11 +48,17 @@ public class LoadWatershedDatasetTask extends AsyncTask <String, String, Watersh
 		MainActivity.wsdProgressText.setVisibility(View.GONE);
 		MainActivity.watershedDataset = result;
 		MainActivity.simulateButton.setEnabled(true);
+		
+//		MainActivity.pitsOverlay = MainActivity.map.addGroundOverlay(new GroundOverlayOptions()
+//		.image(BitmapDescriptorFactory.fromBitmap(MainActivity.watershedDataset.pits.pitsBitmap))
+//		.positionFromBounds(MainActivity.field.getFieldBounds())
+//		.transparency(MainActivity.catchmentsAlpha));
 	}
 
-	public void watershedDatasetOnProgress(int progress, String status) {
-		String[] array = new String[2];
-		array[0] = Integer.toString(progress);
+	public void watershedDatasetOnProgress(int progress, String status, Bitmap bitmap) {
+		//android.os.Debug.waitForDebugger();
+		Object[] array = new Object[2];
+		array[0] = progress;
 		array[1] = status;
 		publishProgress(array);
 	}

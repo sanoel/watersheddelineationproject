@@ -34,17 +34,8 @@
     <ImageView 
         android:id="@+id/catchments_example_image"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="match_parent"
         android:layout_gravity="center_horizontal"
         android:src="@drawable/catchments_example"
         />
-
-    <TextView
-        android:id="@+id/progress_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="When the rain is done, you can delineate the area that flows to any point by dragging the marker and clicking the Delineate button."
-        android:textSize="16sp" />
-
 </LinearLayout>

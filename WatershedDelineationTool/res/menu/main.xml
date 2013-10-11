@@ -1,5 +1,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
+<item
+    android:id="@+id/menu_new_sim"
+    android:showAsAction="never"
+    android:title="Run New Rainfall Simulation"
+    android:visible="false"/>
+
     <item
         android:id="@+id/menu_choose_dem"
         android:showAsAction="never"
@@ -27,6 +33,20 @@
         android:enabled="false"
         android:showAsAction="never"
         android:title="Catchments"/>
+    <item
+        android:id="@+id/menu_delineation"
+        android:checkable="true"
+        android:checked="true"
+        android:enabled="false"
+        android:showAsAction="never"
+        android:title="Delineation"/>
+    <item
+        android:id="@+id/menu_puddles"
+        android:checkable="true"
+        android:checked="true"
+        android:enabled="false"
+        android:showAsAction="never"
+        android:title="Puddles"/>
     <item
         android:id="@+id/menu_help"
         android:showAsAction="never"

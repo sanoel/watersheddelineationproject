@@ -128,6 +128,22 @@ containing a value of this type.
          */
         public static final int zOrderOnTop=0x7f01000d;
     }
+    public static final class color {
+        public static final int common_action_bar_splitter=0x7f050009;
+        /**  Sign-in Button Colors 
+         */
+        public static final int common_signin_btn_dark_text_default=0x7f050000;
+        public static final int common_signin_btn_dark_text_disabled=0x7f050002;
+        public static final int common_signin_btn_dark_text_focused=0x7f050003;
+        public static final int common_signin_btn_dark_text_pressed=0x7f050001;
+        public static final int common_signin_btn_default_background=0x7f050008;
+        public static final int common_signin_btn_light_text_default=0x7f050004;
+        public static final int common_signin_btn_light_text_disabled=0x7f050006;
+        public static final int common_signin_btn_light_text_focused=0x7f050007;
+        public static final int common_signin_btn_light_text_pressed=0x7f050005;
+        public static final int common_signin_btn_text_dark=0x7f05000a;
+        public static final int common_signin_btn_text_light=0x7f05000b;
+    }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
 
@@ -135,57 +151,82 @@ containing a value of this type.
          screen margins) for sw720dp devices (e.g. 10" tablets) in landscape here.
     
          */
-        public static final int activity_horizontal_margin=0x7f070000;
-        public static final int activity_vertical_margin=0x7f070001;
+        public static final int activity_horizontal_margin=0x7f080000;
+        public static final int activity_vertical_margin=0x7f080001;
     }
     public static final class drawable {
         public static final int action_settings=0x7f020000;
         public static final int catchments_example=0x7f020001;
         public static final int collections_collection=0x7f020002;
-        public static final int file=0x7f020003;
-        public static final int intro=0x7f020004;
-        public static final int navigation_back=0x7f020005;
-        public static final int watershedelineation=0x7f020006;
+        public static final int common_signin_btn_icon_dark=0x7f020003;
+        public static final int common_signin_btn_icon_disabled_dark=0x7f020004;
+        public static final int common_signin_btn_icon_disabled_focus_dark=0x7f020005;
+        public static final int common_signin_btn_icon_disabled_focus_light=0x7f020006;
+        public static final int common_signin_btn_icon_disabled_light=0x7f020007;
+        public static final int common_signin_btn_icon_focus_dark=0x7f020008;
+        public static final int common_signin_btn_icon_focus_light=0x7f020009;
+        public static final int common_signin_btn_icon_light=0x7f02000a;
+        public static final int common_signin_btn_icon_normal_dark=0x7f02000b;
+        public static final int common_signin_btn_icon_normal_light=0x7f02000c;
+        public static final int common_signin_btn_icon_pressed_dark=0x7f02000d;
+        public static final int common_signin_btn_icon_pressed_light=0x7f02000e;
+        public static final int common_signin_btn_text_dark=0x7f02000f;
+        public static final int common_signin_btn_text_disabled_dark=0x7f020010;
+        public static final int common_signin_btn_text_disabled_focus_dark=0x7f020011;
+        public static final int common_signin_btn_text_disabled_focus_light=0x7f020012;
+        public static final int common_signin_btn_text_disabled_light=0x7f020013;
+        public static final int common_signin_btn_text_focus_dark=0x7f020014;
+        public static final int common_signin_btn_text_focus_light=0x7f020015;
+        public static final int common_signin_btn_text_light=0x7f020016;
+        public static final int common_signin_btn_text_normal_dark=0x7f020017;
+        public static final int common_signin_btn_text_normal_light=0x7f020018;
+        public static final int common_signin_btn_text_pressed_dark=0x7f020019;
+        public static final int common_signin_btn_text_pressed_light=0x7f02001a;
+        public static final int file=0x7f02001b;
+        public static final int intro=0x7f02001c;
+        public static final int navigation_back=0x7f02001d;
+        public static final int watershedelineation=0x7f02001e;
     }
     public static final class id {
-        public static final int area=0x7f050016;
-        public static final int button_delineate=0x7f05000c;
-        public static final int button_simulate=0x7f05000b;
-        public static final int catchments_example_image=0x7f050013;
-        public static final int depression_storage=0x7f050017;
-        public static final int directoryIcon=0x7f050006;
-        public static final int directoryName=0x7f050009;
-        public static final int fileIcon=0x7f050007;
-        public static final int hybrid=0x7f050004;
-        public static final int imageView=0x7f050005;
-        public static final int load_message=0x7f050011;
-        public static final int map=0x7f05000a;
-        public static final int menuCancel=0x7f05001d;
-        public static final int menuDone=0x7f050025;
-        public static final int menuSelect=0x7f05001c;
-        public static final int menu_catchments=0x7f050023;
-        public static final int menu_center=0x7f050021;
-        public static final int menu_choose_dem=0x7f05001f;
-        public static final int menu_dem=0x7f050022;
-        public static final int menu_exit_help=0x7f05001e;
-        public static final int menu_help=0x7f050024;
-        public static final int menu_settings=0x7f050020;
-        public static final int none=0x7f050000;
-        public static final int normal=0x7f050001;
-        public static final int preview_message=0x7f050012;
-        public static final int progress_bar=0x7f05000d;
-        public static final int progress_fragment_container=0x7f05000f;
-        public static final int progress_message=0x7f05000e;
-        public static final int progress_status=0x7f050014;
-        public static final int results_fragment_container=0x7f050010;
-        public static final int results_title=0x7f050015;
-        public static final int satellite=0x7f050002;
-        public static final int seekBarPrefBarContainer=0x7f05001b;
-        public static final int seekBarPrefUnitsLeft=0x7f05001a;
-        public static final int seekBarPrefUnitsRight=0x7f050018;
-        public static final int seekBarPrefValue=0x7f050019;
-        public static final int terrain=0x7f050003;
-        public static final int upIcon=0x7f050008;
+        public static final int area=0x7f060014;
+        public static final int button_simulate=0x7f06000b;
+        public static final int catchments_example_image=0x7f060012;
+        public static final int depression_storage=0x7f060015;
+        public static final int directoryIcon=0x7f060006;
+        public static final int directoryName=0x7f060009;
+        public static final int fileIcon=0x7f060007;
+        public static final int hybrid=0x7f060004;
+        public static final int imageView=0x7f060005;
+        public static final int load_message=0x7f060010;
+        public static final int map=0x7f06000a;
+        public static final int menuCancel=0x7f06001b;
+        public static final int menuDone=0x7f060026;
+        public static final int menuSelect=0x7f06001a;
+        public static final int menu_catchments=0x7f060022;
+        public static final int menu_center=0x7f060020;
+        public static final int menu_choose_dem=0x7f06001e;
+        public static final int menu_delineation=0x7f060023;
+        public static final int menu_dem=0x7f060021;
+        public static final int menu_exit_help=0x7f06001c;
+        public static final int menu_help=0x7f060025;
+        public static final int menu_new_sim=0x7f06001d;
+        public static final int menu_puddles=0x7f060024;
+        public static final int menu_settings=0x7f06001f;
+        public static final int none=0x7f060000;
+        public static final int normal=0x7f060001;
+        public static final int preview_message=0x7f060011;
+        public static final int progress_bar=0x7f06000c;
+        public static final int progress_fragment_container=0x7f06000e;
+        public static final int progress_message=0x7f06000d;
+        public static final int results_fragment_container=0x7f06000f;
+        public static final int results_title=0x7f060013;
+        public static final int satellite=0x7f060002;
+        public static final int seekBarPrefBarContainer=0x7f060019;
+        public static final int seekBarPrefUnitsLeft=0x7f060018;
+        public static final int seekBarPrefUnitsRight=0x7f060016;
+        public static final int seekBarPrefValue=0x7f060017;
+        public static final int terrain=0x7f060003;
+        public static final int upIcon=0x7f060008;
     }
     public static final class layout {
         public static final int activity_intro=0x7f030000;
@@ -196,78 +237,94 @@ containing a value of this type.
         public static final int seek_bar_preference=0x7f030005;
     }
     public static final class menu {
-        public static final int datapathmenu=0x7f090000;
-        public static final int help_menu=0x7f090001;
-        public static final int main=0x7f090002;
-        public static final int settingsmenu=0x7f090003;
+        public static final int datapathmenu=0x7f0a0000;
+        public static final int help_menu=0x7f0a0001;
+        public static final int main=0x7f0a0002;
+        public static final int settingsmenu=0x7f0a0003;
     }
     public static final class string {
-        public static final int app_name=0x7f060011;
-        /**   Title for notification shown when GooglePlayServices is unavailable [CHAR LIMIT=70] 
+        public static final int app_name=0x7f070015;
+        /**   Title for notification shown when GooglePlayServices needs to be
+        enabled for a application to work. [CHAR LIMIT=70] 
          */
-        public static final int auth_client_availability_notification_title=0x7f06000e;
+        public static final int auth_client_needs_enabling_title=0x7f070010;
+        /**   Title for notification shown when GooglePlayServices needs to be
+        installed for a application to work. [CHAR LIMIT=70] 
+         */
+        public static final int auth_client_needs_installation_title=0x7f070011;
+        /**   Title for notification shown when GooglePlayServices needs to be
+        udpated for a application to work. [CHAR LIMIT=70] 
+         */
+        public static final int auth_client_needs_update_title=0x7f070012;
         /**   Title for notification shown when GooglePlayServices is unavailable [CHAR LIMIT=42] 
          */
-        public static final int auth_client_play_services_err_notification_msg=0x7f06000f;
+        public static final int auth_client_play_services_err_notification_msg=0x7f070013;
         /**   Requested by string saying which app requested the notification. [CHAR LIMIT=42] 
          */
-        public static final int auth_client_requested_by_msg=0x7f060010;
+        public static final int auth_client_requested_by_msg=0x7f070014;
+        /**   Title for notification shown when a bad version of GooglePlayServices
+        has been installed and needs correction for an application to work.
+        [CHAR LIMIT=70] 
+         */
+        public static final int auth_client_using_bad_version_title=0x7f07000f;
         /**  Button in confirmation dialog to enable Google Play services.  Clicking it
         will direct user to application settings of Google Play services where they
         can enable it [CHAR LIMIT=40] 
          */
-        public static final int common_google_play_services_enable_button=0x7f060006;
+        public static final int common_google_play_services_enable_button=0x7f070006;
         /**  Message in confirmation dialog informing user they need to enable
         Google Play services in application settings [CHAR LIMIT=NONE] 
          */
-        public static final int common_google_play_services_enable_text=0x7f060005;
+        public static final int common_google_play_services_enable_text=0x7f070005;
         /**  Title of confirmation dialog informing user they need to enable
         Google Play services in application settings [CHAR LIMIT=40] 
          */
-        public static final int common_google_play_services_enable_title=0x7f060004;
+        public static final int common_google_play_services_enable_title=0x7f070004;
         /**  Button in confirmation dialog for installing Google Play services [CHAR LIMIT=40] 
          */
-        public static final int common_google_play_services_install_button=0x7f060003;
+        public static final int common_google_play_services_install_button=0x7f070003;
         /**  (For phones) Message in confirmation dialog informing user that
         they need to install Google Play services (from Play Store) [CHAR LIMIT=NONE] 
          */
-        public static final int common_google_play_services_install_text_phone=0x7f060001;
+        public static final int common_google_play_services_install_text_phone=0x7f070001;
         /**  (For tablets) Message in confirmation dialog informing user that
         they need to install Google Play services (from Play Store) [CHAR LIMIT=NONE] 
          */
-        public static final int common_google_play_services_install_text_tablet=0x7f060002;
+        public static final int common_google_play_services_install_text_tablet=0x7f070002;
         /**  Title of confirmation dialog informing user that they need to install
         Google Play services (from Play Store) [CHAR LIMIT=40] 
          */
-        public static final int common_google_play_services_install_title=0x7f060000;
+        public static final int common_google_play_services_install_title=0x7f070000;
         /**  Message in confirmation dialog informing user there is an unknown issue in Google Play
         services [CHAR LIMIT=NONE] 
          */
-        public static final int common_google_play_services_unknown_issue=0x7f060009;
+        public static final int common_google_play_services_unknown_issue=0x7f070009;
         /**  Message in confirmation dialog informing user that Google Play services is not supported on their device [CHAR LIMIT=NONE] 
          */
-        public static final int common_google_play_services_unsupported_text=0x7f06000b;
+        public static final int common_google_play_services_unsupported_text=0x7f07000b;
         /**  Title of confirmation dialog informing user that Google Play services is not supported on their device [CHAR LIMIT=40] 
          */
-        public static final int common_google_play_services_unsupported_title=0x7f06000a;
+        public static final int common_google_play_services_unsupported_title=0x7f07000a;
         /**  Button in confirmation dialog for updating Google Play services [CHAR LIMIT=40] 
          */
-        public static final int common_google_play_services_update_button=0x7f06000c;
+        public static final int common_google_play_services_update_button=0x7f07000c;
         /**  Message in confirmation dialog informing user that they need to update
         Google Play services (from Play Store) [CHAR LIMIT=NONE] 
          */
-        public static final int common_google_play_services_update_text=0x7f060008;
+        public static final int common_google_play_services_update_text=0x7f070008;
         /**  Title of confirmation dialog informing user that they need to update
         Google Play services (from Play Store) [CHAR LIMIT=40] 
          */
-        public static final int common_google_play_services_update_title=0x7f060007;
-        /**  Long form sign-in button text. This is the placeholder text, used if we can't
-        find the service-side assets. [CHAR LIMIT=25] 
+        public static final int common_google_play_services_update_title=0x7f070007;
+        /**  Sign-in button text [CHAR LIMIT=15] 
          */
-        public static final int common_signin_button_text_long=0x7f06000d;
-        public static final int delineate_button=0x7f060013;
-        public static final int menu_settings=0x7f060012;
-        public static final int rainfall_settings_title=0x7f060014;
+        public static final int common_signin_button_text=0x7f07000d;
+        /**  Long form sign-in button text [CHAR LIMIT=30] 
+         */
+        public static final int common_signin_button_text_long=0x7f07000e;
+        public static final int delineate_button=0x7f070017;
+        public static final int menu_settings=0x7f070016;
+        public static final int rainfall_settings_title=0x7f070018;
     }
     public static final class style {
         /** 
@@ -291,14 +348,14 @@ containing a value of this type.
     
  API 14 theme customizations can go here. 
          */
-        public static final int AppBaseTheme=0x7f080000;
+        public static final int AppBaseTheme=0x7f090000;
         /**  Application theme. 
  All customizations that are NOT specific to a particular API-level can go here. 
          */
-        public static final int AppTheme=0x7f080001;
+        public static final int AppTheme=0x7f090001;
     }
     public static final class xml {
-        public static final int preferences=0x7f040000;
+        public static final int settings_preferences=0x7f040000;
     }
     public static final class styleable {
         /** Attributes that can be used with a MapAttrs.
@@ -354,7 +411,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:cameraBearing
+          @attr name org.waterapps.watershed:cameraBearing
         */
         public static final int MapAttrs_cameraBearing = 1;
         /**
@@ -368,7 +425,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:cameraTargetLat
+          @attr name org.waterapps.watershed:cameraTargetLat
         */
         public static final int MapAttrs_cameraTargetLat = 2;
         /**
@@ -382,7 +439,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:cameraTargetLng
+          @attr name org.waterapps.watershed:cameraTargetLng
         */
         public static final int MapAttrs_cameraTargetLng = 3;
         /**
@@ -396,7 +453,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:cameraTilt
+          @attr name org.waterapps.watershed:cameraTilt
         */
         public static final int MapAttrs_cameraTilt = 4;
         /**
@@ -410,7 +467,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:cameraZoom
+          @attr name org.waterapps.watershed:cameraZoom
         */
         public static final int MapAttrs_cameraZoom = 5;
         /**
@@ -430,7 +487,7 @@ containing a value of this type.
 <tr><td><code>terrain</code></td><td>3</td><td></td></tr>
 <tr><td><code>hybrid</code></td><td>4</td><td></td></tr>
 </table>
-          @attr name android:mapType
+          @attr name org.waterapps.watershed:mapType
         */
         public static final int MapAttrs_mapType = 0;
         /**
@@ -444,7 +501,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiCompass
+          @attr name org.waterapps.watershed:uiCompass
         */
         public static final int MapAttrs_uiCompass = 6;
         /**
@@ -458,7 +515,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiRotateGestures
+          @attr name org.waterapps.watershed:uiRotateGestures
         */
         public static final int MapAttrs_uiRotateGestures = 7;
         /**
@@ -472,7 +529,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiScrollGestures
+          @attr name org.waterapps.watershed:uiScrollGestures
         */
         public static final int MapAttrs_uiScrollGestures = 8;
         /**
@@ -486,7 +543,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiTiltGestures
+          @attr name org.waterapps.watershed:uiTiltGestures
         */
         public static final int MapAttrs_uiTiltGestures = 9;
         /**
@@ -500,7 +557,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiZoomControls
+          @attr name org.waterapps.watershed:uiZoomControls
         */
         public static final int MapAttrs_uiZoomControls = 10;
         /**
@@ -514,7 +571,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiZoomGestures
+          @attr name org.waterapps.watershed:uiZoomGestures
         */
         public static final int MapAttrs_uiZoomGestures = 11;
         /**
@@ -528,7 +585,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:useViewLifecycle
+          @attr name org.waterapps.watershed:useViewLifecycle
         */
         public static final int MapAttrs_useViewLifecycle = 12;
         /**
@@ -542,7 +599,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:zOrderOnTop
+          @attr name org.waterapps.watershed:zOrderOnTop
         */
         public static final int MapAttrs_zOrderOnTop = 13;
     };

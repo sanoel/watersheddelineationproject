@@ -62,13 +62,13 @@ public class ElevationRaster {
 	}
 	
 	public Bitmap getBitmap() {
-        Log.i("bitmap", "bitmap being created");
+//        Log.i("bitmap", "bitmap being created");
 		Bitmap bitmap;
 		int intpixels[] = new int[getNrows()*getNcols()];
 
-        Log.i("min value", Float.toString(getMinElevation()));
-        Log.i("max value", Float.toString(getMaxElevation()));
-        Log.i("range value", Float.toString(getMaxElevation()-getMinElevation()));
+//        Log.i("min value", Float.toString(getMinElevation()));
+//        Log.i("max value", Float.toString(getMaxElevation()));
+//        Log.i("range value", Float.toString(getMaxElevation()-getMinElevation()));
 		for(int k = 0; k<getNrows(); k++) {
 			for(int m=0; m<getNcols(); m++) {
 		    	//normalize each float to a value from 0-255

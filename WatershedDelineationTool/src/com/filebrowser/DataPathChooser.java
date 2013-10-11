@@ -73,32 +73,29 @@ public class DataPathChooser extends ListActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// TODO Auto-generated method stub
-		switch (item.getItemId()) {
-		case R.id.menuCancel:
+		int itemId = item.getItemId();
+		if (itemId == R.id.menuCancel) {
 			if(returnIntent.contentEquals("back") == false){
 				Intent i = new Intent(returnIntent);
 				//startActivity(i);
 			}
 			finish();
-			break;
-		case R.id.menuSelect:
+		} else if (itemId == R.id.menuSelect) {
 			SharedPreferences prefs = PreferenceManager
 					.getDefaultSharedPreferences(getBaseContext());
 			SharedPreferences.Editor editor = prefs.edit();
 			editor.putString("dataPath", currentDirectory.getPath() + "/");
-            editor.putString("dem_dir", currentDirectory.getPath() + "/");
-            MainActivity.demDirectory = currentDirectory.getPath() + "/";
-            MainActivity.removeDemOutlines();
-            MainActivity.scanDEMs();
-            editor.commit();
-            SettingsActivity.updateDemFolder();
+			editor.putString("dem_dir", currentDirectory.getPath() + "/");
+			MainActivity.demDirectory = currentDirectory.getPath() + "/";
+			MainActivity.removeDemOutlines();
+			MainActivity.scanDEMs();
+			editor.commit();
+			SettingsActivity.updateDemFolder();
 			if(returnIntent.contentEquals("back") == false){
 				Intent i2 = new Intent(returnIntent);
 				//startActivity(i2);
 			}
 			finish();
-			break;
 		}
 		return false;
 	}

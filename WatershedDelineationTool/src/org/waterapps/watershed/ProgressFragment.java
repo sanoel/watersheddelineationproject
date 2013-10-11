@@ -4,6 +4,7 @@ import org.waterapps.watershed.R;
 import org.waterapps.watershed.WatershedDataset.WatershedDatasetListener;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -35,6 +36,7 @@ public class ProgressFragment extends Fragment{
 		super.onActivityCreated(savedInstanceState);
 		this.getData();
 	}
+
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
@@ -42,6 +44,7 @@ public class ProgressFragment extends Fragment{
 			pflistener = (ProgressFragmentListener) activity;
 		}
 	}
+
 //	Simulating
 	public void getData() {
 		watershedDataset = pflistener.ProgressFragmentGetData();
@@ -62,10 +65,9 @@ public class ProgressFragment extends Fragment{
 		ImageView catchmentsImage = (ImageView) view.findViewById(R.id.catchments_example_image);
 		previewMessage = (TextView) view.findViewById(R.id.preview_message);
 		previewMessage.setText("Here's what's coming...");
-		progressMessage = (TextView) view.findViewById(R.id.progress_status);
-		
 		return view;
 	}
+
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);	
@@ -75,8 +77,8 @@ public class ProgressFragment extends Fragment{
 		protected void onPreExecute() {
 			super.onPreExecute();
 			progressBar.setVisibility(View.VISIBLE);
-			progressMessage.setVisibility(View.VISIBLE);
 		}
+
 		protected WatershedDataset doInBackground(WatershedDataset... inputWds) {		 
 			// Background Work
 			inputWds[0].setTask(this);
@@ -89,7 +91,6 @@ public class ProgressFragment extends Fragment{
 		@Override
 		protected void onProgressUpdate(String... values) {
 			progressBar.setProgress(Integer.parseInt(values[0]));
-//			loadStatusMessage.setText(values[1]);
 		}
 
 		protected void onPostExecute(WatershedDataset result) {
@@ -98,7 +99,7 @@ public class ProgressFragment extends Fragment{
 		}
 
 		@Override
-		public void watershedDatasetOnProgress(int progress, String status) {
+		public void watershedDatasetOnProgress(int progress, String status, Bitmap bitmap) {
 			String[] array = new String[2];
 			array[0] = Integer.toString(progress);
 			array[1] = status;
@@ -107,8 +108,7 @@ public class ProgressFragment extends Fragment{
 
 		@Override
 		public void watershedDatasetDone() {
-
 		}
+
 	}
-	
 }

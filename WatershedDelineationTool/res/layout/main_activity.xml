@@ -12,10 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="5"
-        class="com.google.android.gms.maps.SupportMapFragment"
-        map:cameraTargetLat="40.424"
-        map:cameraTargetLng="-86.929"
-        map:cameraZoom="3" />
+        class="com.google.android.gms.maps.SupportMapFragment"/>
 
     <Button
         android:id="@+id/button_simulate"
@@ -27,17 +24,6 @@
         android:enabled="false"
         android:onClick="delineate"
         android:text="@string/delineate_button" />
-
-    <Button
-        android:id="@+id/button_delineate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:background="@android:drawable/btn_default"
-        android:enabled="true"
-        android:onClick="delineate"
-        android:text="Delineate" />
 
     <ProgressBar
         android:id="@+id/progress_bar"

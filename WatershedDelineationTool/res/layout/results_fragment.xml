@@ -9,7 +9,7 @@
         android:id="@+id/results_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="left"
         android:text="Results"
         android:textSize="24sp"
         android:textStyle="bold" />
@@ -18,17 +18,14 @@
         android:id="@+id/area"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Area: "
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:layout_gravity="left"
+        android:textSize="18sp"/>
 
     <TextView
         android:id="@+id/depression_storage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:layout_gravity="left"
+        android:textSize="18sp"/>
 
 </LinearLayout>

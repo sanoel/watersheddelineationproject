@@ -19,7 +19,6 @@ public class RasterLayer {
 	LatLng sw;
 	LatLng ne;
 	
-	
 	//constructor method
 	public RasterLayer(double[][] inputDouble, LatLng southwest, LatLng northeast) {
 		int numrows = inputDouble.length;
@@ -58,7 +57,7 @@ public class RasterLayer {
 	//creates an overlay view of the field on the specified map object
 	public GroundOverlay createOverlay(GoogleMap map) {
 		if(map == null){
-			Log.e("createOverlay", "Null map");
+//			Log.e("createOverlay", "Null map");
 		}
 		GroundOverlay groundOverlay = map.addGroundOverlay(new GroundOverlayOptions()
 	     .image(BitmapDescriptorFactory.fromBitmap(rasterLayerBitmap))

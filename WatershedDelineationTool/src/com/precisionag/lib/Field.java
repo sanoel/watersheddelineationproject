@@ -188,7 +188,7 @@ public class Field {
 
 		//remove old map overlay and create new one
 		prevoverlay = createOverlay(mapFragment.getMap());
-		if (MainActivity.dem_visibility) {
+		if (MainActivity.dem_visible) {
 			prevoverlay.setTransparency(MainActivity.getAlpha());
 		}
 
