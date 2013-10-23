@@ -14,6 +14,9 @@ public class FlowDirectionCell {
 	}
 	
 	public void setParentList(ArrayList<Point> inputParentList) {
+		if (parentList != null) {
+			parentList.clear();
+		}
 		parentList = inputParentList;
 	}
 	

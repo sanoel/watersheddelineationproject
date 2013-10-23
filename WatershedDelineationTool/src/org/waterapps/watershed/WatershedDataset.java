@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.os.AsyncTask;
@@ -41,7 +42,7 @@ public class WatershedDataset {
 		public void watershedDatasetOnProgress(int progress, String status, Bitmap bitmaps);
 		public void watershedDatasetDone();
 	}
-	
+
 	public interface DelineationListener {
 		public void delineationOnProgress(Bitmap bitmap);
 		public void delineationDone();
@@ -109,10 +110,15 @@ public class WatershedDataset {
 	}
 
 	public void recalculatePitsForNewRainfall() {
+		MainActivity.simulateButton.setEnabled(false);
 		for (int i=0; i < this.pits.pitDataList.size(); i++) {
+			if (this.pits.pitDataList.get(i).pitId < 0) {
+				continue;
+			}
 			this.pits.pitDataList.get(i).netAccumulationRate = (RainfallSimConfig.rainfallIntensity * this.pits.pitDataList.get(i).allPointsList.size() * cellSizeX * cellSizeY);
 			this.pits.pitDataList.get(i).spilloverTime = this.pits.pitDataList.get(i).retentionVolume / this.pits.pitDataList.get(i).netAccumulationRate;
 		}
+		MainActivity.simulateButton.setEnabled(true);
 	}
 
 	public void setTask(AsyncTask task){
@@ -254,6 +260,7 @@ public class WatershedDataset {
 		return pitCellCount;
 	}
 
+	// 
 	public void resolveFlowDirectionParents() {
 		int numrows = dem.length;
 		int numcols = dem[0].length;
@@ -265,7 +272,20 @@ public class WatershedDataset {
 					continue;
 				}
 				Point currentPoint = new Point(c, r);
-				ArrayList<Point> parentList = new ArrayList<Point>();	
+				ArrayList<Point> parentList = new ArrayList<Point>();
+				//				if (Math.abs(c - flowDirection[r][c].childPoint.x) > 1 || Math.abs(r - flowDirection[r][c].childPoint.y) > 1) {
+				//					Log.w("problemA", currentPoint.toString() + " " + flowDirection[r][c].childPoint.toString());
+				//				}
+				//				if (flowDirection[r][c].parentList != null) {
+				//					for (int i = 1; i < flowDirection[r][c].parentList.size(); i++) {
+				//						if (Math.abs(c - flowDirection[r][c].parentList.get(i).x) > 1 || Math.abs(r - flowDirection[r][c].parentList.get(i).y) > 1) {
+				//							Log.w("problemB", currentPoint.toString() + " " + flowDirection[r][c].parentList.get(i).toString());
+				//						}
+				//					}
+				//				} else {
+				//					Log.w("null parents", currentPoint.toString());
+				//				}
+
 				// Find all cells pointing to current cell. This comes after assuring that the current cell isn't on the border.
 				for (int x = -1; x < 2; x++) {
 					for (int y = -1; y < 2; y++){
@@ -280,7 +300,7 @@ public class WatershedDataset {
 						}
 					}
 				}
-				MainActivity.watershedDataset.flowDirection[r][c].setParentList(parentList);
+				this.flowDirection[r][c].setParentList(parentList);
 			}
 		}
 	}
@@ -364,14 +384,14 @@ public class WatershedDataset {
 				for (int x = -1; x < 2; x++) {
 					for (int y = -1; y < 2; y++){
 						if (x == 0 && y == 0) {
-							continue;}
+							continue;
+						}
+
 						if (this.pits.pitIdMatrix[r+y][c+x] != this.pits.pitIdMatrix[r][c]) {
 							double currentElevation = this.dem[r][c];
 							double neighborElevation = this.dem[r+y][c+x];
 							onBorder = true;
 							if (Float.isNaN(firstPit.spilloverElevation) || (currentElevation <= firstPit.spilloverElevation && neighborElevation <= firstPit.spilloverElevation)) {
-//								firstPit.minOutsidePerimeterElevation = neighborElevation;
-//								firstPit.minInsidePerimeterElevation = currentElevation;
 								firstPit.spilloverElevation = (float) Math.max(neighborElevation, currentElevation);
 								firstPit.pitOutletPoint = currentPoint;
 								firstPit.outletSpilloverFlowDirection = new Point(c+x, r+y);
@@ -388,13 +408,13 @@ public class WatershedDataset {
 			// Volume/elevation-dependent variables and calculations
 			firstPit.filledVolume = secondPit.filledVolume + firstPit.retentionVolume;
 			firstPit.retentionVolume = firstPit.filledVolume;
-//			firstPit.cellCountToBeFilled = 0;
+			//			firstPit.cellCountToBeFilled = 0;
 			for (int i = 0; i < firstPit.allPointsList.size(); i++) {
 				int r = firstPit.allPointsList.get(i).y;
 				int c = firstPit.allPointsList.get(i).x;
 				if (this.dem[r][c] < firstPit.spilloverElevation) {
 					firstPit.retentionVolume += ((firstPit.spilloverElevation - this.dem[r][c]) * cellSizeX * cellSizeY);
-//					firstPit.cellCountToBeFilled++;
+					//					firstPit.cellCountToBeFilled++;
 				}
 			}
 
@@ -494,27 +514,27 @@ public class WatershedDataset {
 			//					firstPit.pitDrainageRate = firstPit.pitDrainageRate; // + drainage[r][c]
 			//				}
 			firstPit.netAccumulationRate = (RainfallSimConfig.rainfallIntensity * firstPit.allPointsList.size() * cellSizeX * cellSizeY) - firstPit.pitDrainageRate;
-//			firstPit.spilloverTime = firstPit.retentionVolume/firstPit.netAccumulationRate;
+			//			firstPit.spilloverTime = firstPit.retentionVolume/firstPit.netAccumulationRate;
 			firstPit.spilloverTime = Double.POSITIVE_INFINITY;
 
 			// Removed the second pit
 			this.pits.pitDataList.remove(secondPit);
 
-//			////////////////////////////////////////
-//			int color = this.pits.pitsBitmap.getPixel(this.dem[0].length - 1 - firstPit.outletSpilloverFlowDirection.x, firstPit.outletSpilloverFlowDirection.y);
-//			for (int i = 0; i < firstPit.allPointsList.size(); i++) {
-//				this.pits.pitIdMatrix[firstPit.allPointsList.get(i).y][firstPit.allPointsList.get(i).x] = secondPitId;
-//				this.pits.pitsBitmap.setPixel(this.dem[0].length - 1 - firstPit.allPointsList.get(i).x, firstPit.allPointsList.get(i).y, color);				
-//			}
-//			resolveFilledArea();
-//
-//			// Update all pits that will overflow into the filled pit as now overflowing into the second pit's ID
-//			for (int i = 0; i < this.pits.pitDataList.size(); i++){
-//				if (this.pits.pitDataList.get(i).pitIdOverflowingInto == firstPit.pitId) {
-//					this.pits.pitDataList.get(i).pitIdOverflowingInto = secondPitId;
-//				}
-//			}
-//			this.pits.pitDataList.remove(0);
+			//			////////////////////////////////////////
+			//			int color = this.pits.pitsBitmap.getPixel(this.dem[0].length - 1 - firstPit.outletSpilloverFlowDirection.x, firstPit.outletSpilloverFlowDirection.y);
+			//			for (int i = 0; i < firstPit.allPointsList.size(); i++) {
+			//				this.pits.pitIdMatrix[firstPit.allPointsList.get(i).y][firstPit.allPointsList.get(i).x] = secondPitId;
+			//				this.pits.pitsBitmap.setPixel(this.dem[0].length - 1 - firstPit.allPointsList.get(i).x, firstPit.allPointsList.get(i).y, color);				
+			//			}
+			//			resolveFilledArea();
+			//
+			//			// Update all pits that will overflow into the filled pit as now overflowing into the second pit's ID
+			//			for (int i = 0; i < this.pits.pitDataList.size(); i++){
+			//				if (this.pits.pitDataList.get(i).pitIdOverflowingInto == firstPit.pitId) {
+			//					this.pits.pitDataList.get(i).pitIdOverflowingInto = secondPitId;
+			//				}
+			//			}
+			//			this.pits.pitDataList.remove(0);
 		}
 		return true;	
 	}
@@ -567,24 +587,38 @@ public class WatershedDataset {
 		int numrows = this.dem.length;
 		int numcols = this.dem[0].length;
 
-		int[] colorarray = new int[this.pits.pitIdMatrix.length*this.pits.pitIdMatrix[0].length];
-		Arrays.fill(colorarray, Color.TRANSPARENT);
-		Bitmap.Config config = Bitmap.Config.ARGB_8888;
-		Bitmap delinBitmap = Bitmap.createBitmap(colorarray, numcols, numrows, config);
-		delinBitmap = delinBitmap.copy(config, true);
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inPurgeable = true;
+		options.inInputShareable = true;
+		
+		Bitmap icon = BitmapFactory.decodeResource(MainActivity.context.getResources(), R.drawable.watershedelineation, options);
+		Bitmap delinBitmap = Bitmap.createScaledBitmap(icon, numcols, numrows, false);
+		for (int r = 1; r < numrows-1; r++) {
+			for (int c = 1; c < numcols-1; c++) {
+				delinBitmap.setPixel(numcols - 1 - c, r, Color.TRANSPARENT);
+			}
+		}
 		delineatedArea = 0; //number of cells in the delineation
 		delineatedStorageVolume = 0.0;
 
 		// discover adjacent points that may be part of a puddle
 		List<Point> indicesToCheck = new ArrayList<Point>();
 		List<Point> indicesToCheckPuddle = new ArrayList<Point>();
-		double puddleElevation = this.dem[point.y][point.x]; 
+		float puddleElevation = this.dem[point.y][point.x]; 
+		indicesToCheck.add(point);
 		indicesToCheckPuddle.add(point);
+
 
 		while (!indicesToCheckPuddle.isEmpty()) {
 			int r = indicesToCheckPuddle.get(0).y;
 			int c = indicesToCheckPuddle.get(0).x;
 			indicesToCheckPuddle.remove(0);
+			if (delinBitmap.getPixel(numcols - 1 - c, r) == Color.RED){
+				continue;
+			}
+			delinBitmap.setPixel(numcols - 1 - c, r, Color.RED);
+			delineatedArea++;
+			delineatedStorageVolume += dem[r][c] - originalDem[r][c];
 			for (int x = -1; x < 2; x++) {
 				for (int y = -1; y < 2; y++){
 					if (x == 0 && y == 0) {
@@ -593,54 +627,51 @@ public class WatershedDataset {
 					if (r+y >= numrows-1 || r+y <= 0 || c+x >= numcols-1 || c+x <= 0) {
 						continue;
 					}
-					if (dem[r+y][c+x] == puddleElevation && !indicesToCheck.contains(new Point(c+x, r+y))) {
+					if (dem[r+y][c+x] == puddleElevation && delinBitmap.getPixel(numcols - 1 - (c+x), (r+y)) != Color.RED) {
 						indicesToCheckPuddle.add(new Point(c+x, r+y));
 						indicesToCheck.add(new Point(c+x, r+y));
 					}
 				}
 			}
 		}
-		
+
 		// Add a buffer around the chosen pixel to provide a more likely meaningful delineation
 		for (int x = -3; x < 4; x++) {
 			for (int y = -3; y < 4; y++) {
 				if (point.y+y >= numrows-1 || point.y+y <= 0 || point.x+x >= numcols-1 || point.x+x <= 0) {
 					continue;
 				}
-				if (!indicesToCheck.contains(new Point(point.x+x, point.y+y))) {
-					indicesToCheck.add(new Point(x+point.x, y + point.y));
+				if (delinBitmap.getPixel(numcols - 1 - (point.x+x), (point.y+y)) != Color.RED) {
+					indicesToCheck.add(new Point(x+point.x, y +point.y));
+					delinBitmap.setPixel(numcols - 1 - (point.x+x), (point.y+y), Color.RED);
+					delineatedArea++;
+					delineatedStorageVolume += dem[point.y+y][point.x+x] - originalDem[point.y+y][point.x+x];
 				}
 			}
 		}
 
 		// Now find all cells draining to either the puddle or the buffered delineation point
-		int changes = 0;
-		List<Point> allIndices = new ArrayList<Point>();
-		allIndices.addAll(indicesToCheck);
-		while (!indicesToCheck.isEmpty()) {			
+		while (!indicesToCheck.isEmpty()) {                        
 			int r = indicesToCheck.get(0).y;
 			int c = indicesToCheck.get(0).x;
-			delinBitmap.setPixel(numcols - 1 - c, r, Color.RED);
-			changes++;
-			if(changes == 50){
-				changes = 0;
-				delineationListener.delineationOnProgress(delinBitmap);
-			}
 			indicesToCheck.remove(0);
-			delineatedArea++;
-			delineatedStorageVolume += dem[r][c] - originalDem[r][c];
+
 			if (flowDirection[r][c].parentList.isEmpty()) {
 				continue;
 			}
+
 			for (int i = 0; i < flowDirection[r][c].parentList.size(); i++) {
-				if (!allIndices.contains(flowDirection[r][c].parentList.get(i))) {
+				if (delinBitmap.getPixel(numcols - 1 - flowDirection[r][c].parentList.get(i).x, flowDirection[r][c].parentList.get(i).y) != Color.RED) {
 					indicesToCheck.add(flowDirection[r][c].parentList.get(i));
-					allIndices.add(flowDirection[r][c].parentList.get(i));
+					delinBitmap.setPixel(numcols - 1 - flowDirection[r][c].parentList.get(i).x, flowDirection[r][c].parentList.get(i).y, Color.RED);
+					delineatedArea++;
+					delineatedStorageVolume += dem[r][c] - originalDem[r][c];
 				}
 			}
 		}
 		return delinBitmap;
 	}
+
 
 	public Bitmap drawPuddles() {
 		int numrows = dem.length;

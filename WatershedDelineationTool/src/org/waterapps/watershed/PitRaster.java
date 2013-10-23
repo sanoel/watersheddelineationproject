@@ -8,8 +8,10 @@ import java.util.Random;
 import org.waterapps.watershed.WatershedDataset.WatershedDatasetListener;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.util.Log;
 
 public class PitRaster {
 	// bitmap represents rasterized elevation data
@@ -47,8 +49,15 @@ public class PitRaster {
 		}
 		pitDataList = new ArrayList<Pit>(pitCellCount);
 		maxPitId = -1;
-		Bitmap.Config config = Bitmap.Config.ARGB_8888;
-		pitsBitmap = Bitmap.createBitmap(numcols, numrows, config);
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inPurgeable = true;
+		options.inInputShareable = true;
+		
+		Bitmap icon = BitmapFactory.decodeResource(MainActivity.context.getResources(), R.drawable.watershedelineation, options);
+		pitsBitmap = Bitmap.createScaledBitmap(icon, numcols, numrows, false);
+		
+//		Bitmap.Config config = Bitmap.Config.ARGB_8888;
+//		pitsBitmap = Bitmap.createBitmap(numcols, numrows, config);
 		for (int c = numcols-1; c > -1; c--) {
 			for (int r = 0; r < numrows; r++) {
 				// Boundary cells and those pits along the edge that do not
@@ -80,10 +89,10 @@ public class PitRaster {
 			status = (int) (65 + (25 * (i/(double)pitDataList.size())));
 			listener.watershedDatasetOnProgress(status, "Computing Surface Depression Dimensions", null);
 		}
-		identifyEdgePits(flowDirection);
+		identifyEdgePits();
 	}
 
-	public void identifyEdgePits(FlowDirectionCell[][] flowDirection) {
+	public void identifyEdgePits() {
 		int numrows = flowDirection.length;
 		int numcols = flowDirection[0].length;
 

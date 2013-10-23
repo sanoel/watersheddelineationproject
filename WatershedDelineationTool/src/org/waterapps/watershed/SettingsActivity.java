@@ -68,7 +68,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
             int alpha = sharedPreferences.getInt(key, 50);
             MainActivity.setCatchmentsAlpha(1 - (float) alpha / 100.0f);
         } else if (key.equals("pref_rainfall_amount")) {
-        	RainfallSimConfig.setDepth(Float.parseFloat(sharedPreferences.getString("pref_rainfall_amount", "100.0")));
+        	RainfallSimConfig.setDepth(Float.parseFloat(sharedPreferences.getString("pref_rainfall_amount", "1.0")));
         	Preference pref = findPreference("pref_rainfall_amount");
             pref.setSummary(sharedPreferences.getString("pref_rainfall_amount", "1.0")+"-Inch, 24-Hour Storm");
             MainActivity.watershedDataset.recalculatePitsForNewRainfall();

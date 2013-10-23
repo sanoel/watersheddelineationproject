@@ -44,7 +44,7 @@ public class ResultsPanelFragment extends Fragment{
 			depressionStorage.setText("Retention Volume: " + String.format("%.3f", MainActivity.watershedDataset.pits.pitDataList.get(MainActivity.selectedPitIndex).retentionVolume*0.000810713194) + " acre-feet");
 		} else {
 			area.setText("Area: " + String.format("%.3f", MainActivity.watershedDataset.delineatedArea*0.000247105*TiffDecoder.nativeTiffGetScaleX()*TiffDecoder.nativeTiffGetScaleY())+ " acres");
-			depressionStorage.setText("Retention Volume: " + String.format("%.3f", MainActivity.watershedDataset.delineatedStorageVolume) + " acre-feet");
+			depressionStorage.setText("Retention Volume: " + String.format("%.3f", MainActivity.watershedDataset.delineatedStorageVolume * 0.000810713194) + " acre-feet");
 		}
 	}
 	

@@ -100,10 +100,10 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	
 	public static boolean coloring;
 	public static boolean currentlyDrawing;
-	public static boolean dem_visible = true;
-	public static boolean pits_visible = true;
-	public static boolean delineation_visible = true;
-	public static boolean puddle_visible = true;
+	public static boolean dem_visible;
+	public static boolean pits_visible;
+	public static boolean delineation_visible;
+	public static boolean puddle_visible;
 	public static boolean delineating = false;
 	private boolean firstStart;
 
@@ -115,12 +115,19 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	public static GroundOverlay pitsOverlay;
 	public static GroundOverlay pitsOverlayBuffer;
 	public static GroundOverlay delineationOverlay;
-	public static GroundOverlay delineationOverlayBuffer;
 	public static GroundOverlay puddleOverlay;
+	public static GroundOverlay demOverlay;	
+	
+	public static GroundOverlayOptions pitsOverlayOptions;
+	public static GroundOverlayOptions pitsOverlayBufferOptions;
+	public static GroundOverlayOptions delineationOverlayOptions;
+	public static GroundOverlayOptions puddleOverlayOptions;
+	public static GroundOverlayOptions demOverlayOptions;
+	public static MarkerOptions delineationMarkerOptions;
+	
+	public static Marker delineationMarker;
 	static Polygon delineationPolygon;
-	static Marker delineationMarker;
 	static ArrayList<Polyline> demOutlines;
-//	Bitmap filledPitBitmap;
 
 	public static Point delineationPoint;
 	public static Point clickedPoint;
@@ -170,6 +177,16 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		setDelineationAlpha(1 - (float) prefs.getInt("pref_key_delin_trans_level", 50) / 100.0f);
 		setPuddleAlpha(1 - (float) prefs.getInt("pref_key_puddle_trans_level", 50) / 100.0f);
 		setCatchmentsAlpha(1 - (float) prefs.getInt("pref_key_catchments_trans_level", 50) / 100.0f);
+		
+//		setPuddlesVisibility(prefs.getBoolean("pref_key_puddle_vis", true));
+//		setDemVisibility(prefs.getBoolean("pref_key_dem_vis", true));
+//		setDelineationVisibility(prefs.getBoolean("pref_key_delin_vis", true));
+//		setCatchmentsVisibility(prefs.getBoolean("pref_key_pits_vis", true));
+		
+		dem_visible = true;
+		pits_visible = true;
+		puddle_visible = true;
+		delineation_visible = true;
 
 		hsvColors = new int[256];
 		hsvTransparentColors = new int[256];
@@ -289,7 +306,21 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 			MenuItem mi = myMenu.findItem(R.id.menu_new_sim);
 			mi.setVisible(false);
 			watershedDataset = null;
-			Field.prevoverlay.remove();
+			if (pitsOverlay != null) {
+				pitsOverlay.remove();
+				pitsOverlay = null;
+			}
+			if (delineationOverlay != null) {
+				delineationOverlay.remove();
+				delineationOverlay = null;
+			}
+			if (puddleOverlay != null) {
+				puddleOverlay.remove();
+				puddleOverlay = null;
+			}
+			if (demOverlay != null) {
+				demOverlay.remove();
+			}
 			finish();
 			startActivity(getIntent());
 			return true;
@@ -300,12 +331,11 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 			SharedPreferences.Editor edit = prefs.edit();
 			if (dem_visible) {
 				dem_visible = false;
-				Field.prevoverlay.setTransparency(1);
-			}
-			else {
+			} else {
 				dem_visible = true;
-				Field.prevoverlay.setTransparency(demAlpha);
 			}
+			demOverlay.setVisible(dem_visible);
+			demOverlayOptions.visible(dem_visible);
 			edit.putBoolean("pref_key_dem_vis", dem_visible);
 			edit.commit();
 			item.setChecked(dem_visible);
@@ -314,12 +344,12 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 			SharedPreferences.Editor edit = prefs.edit();
 			if (pits_visible) {
 				pits_visible = false;
-				pitsOverlay.setTransparency(1);
-			}
-			else {
+			} else {
 				pits_visible = true;
-				pitsOverlay.setTransparency(pitsAlpha);
 			}
+			pitsOverlay.setVisible(pits_visible);
+			pitsOverlayOptions.visible(pits_visible);
+
 			edit.putBoolean("pref_key_pits_vis", pits_visible);
 			edit.commit();
 			item.setChecked(pits_visible);
@@ -328,14 +358,12 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 			SharedPreferences.Editor edit = prefs.edit();
 			if (delineation_visible) {
 				delineation_visible = false;
-				delineationOverlay.setTransparency(1);
-				hideResultsFragment();
-			}
-			else {
+			} else {
 				delineation_visible = true;
-				delineationOverlay.setTransparency(delineationAlpha);
 				showResultsFragment();
 			}
+			delineationOverlay.setVisible(delineation_visible);
+			delineationOverlayOptions.visible(delineation_visible);
 			edit.putBoolean("pref_key_delin_vis", delineation_visible);
 			edit.commit();
 			item.setChecked(delineation_visible);
@@ -344,12 +372,12 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 			SharedPreferences.Editor edit = prefs.edit();
 			if (puddle_visible) {
 				puddle_visible = false;
-				puddleOverlay.setTransparency(1);
-			}
-			else {
+			} else {
 				puddle_visible = true;
-				puddleOverlay.setTransparency(puddleAlpha);
 			}
+			puddleOverlay.setVisible(puddle_visible);
+			puddleOverlayOptions.visible(puddle_visible);
+
 			edit.putBoolean("pref_key_puddle_vis", puddle_visible);
 			edit.commit();
 			item.setChecked(puddle_visible);
@@ -380,22 +408,27 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		}
 		
 		//Show the pits on the field
-		pitsOverlay = map.addGroundOverlay(new GroundOverlayOptions()
+		pitsOverlayOptions = new GroundOverlayOptions()
 		.image(BitmapDescriptorFactory.fromBitmap(watershedDataset.pits.pitsBitmap))
 		.positionFromBounds(field.getFieldBounds())
-		.transparency(pitsAlpha));
-		pitsOverlay.setVisible(pits_visible);
+		.transparency(pitsAlpha)
+		.visible(pits_visible)
+		.zIndex(1);
+		pitsOverlay = map.addGroundOverlay(pitsOverlayOptions);
 
-		puddleOverlay = map.addGroundOverlay(new GroundOverlayOptions()
+		puddleOverlayOptions = new GroundOverlayOptions()
 		.image(BitmapDescriptorFactory.fromBitmap(watershedDataset.drawPuddles()))
 		.positionFromBounds(field.getFieldBounds())
-		.transparency(puddleAlpha));
+		.transparency(puddleAlpha)
+		.visible(puddle_visible)
+		.zIndex(2);
+		puddleOverlay = map.addGroundOverlay(puddleOverlayOptions);
 		puddleOverlay.setVisible(puddle_visible);
 		
 		LatLng midfield = new LatLng((MainActivity.field.getFieldBounds().southwest.latitude + MainActivity.field.getFieldBounds().northeast.latitude)/2.0, (MainActivity.field.getFieldBounds().southwest.longitude + MainActivity.field.getFieldBounds().northeast.longitude)/2.0);
-		delineationMarker = MainActivity.map.addMarker(new MarkerOptions()
-		.position(midfield)
-		.title(Integer.toString(watershedDataset.pits.pitIdMatrix[field.getXYFromLatLng(midfield).y][field.getXYFromLatLng(midfield).x])));
+		delineationMarkerOptions = new MarkerOptions()
+		.position(midfield);
+		delineationMarker = MainActivity.map.addMarker(delineationMarkerOptions);
 		delineationMarker.setDraggable(true);
 		
 		delineating = true;
@@ -574,7 +607,6 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		map.animateCamera(CameraUpdateFactory.newLatLngBounds(inputRaster.getBounds(), 50));
 		field.updatePolyLine();
 		updateColors(field);
-		//		new LatLng((MainActivity.field.getFieldBounds().southwest.latitude + MainActivity.field.getFieldBounds().northeast.latitude)/2.0, (MainActivity.field.getFieldBounds().southwest.longitude + MainActivity.field.getFieldBounds().northeast.longitude)/2.0);
 		new LoadWatershedDatasetTask(inputRaster).execute();
 	}
 
@@ -594,12 +626,12 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 			bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
 			field.setBitmap(bitmap);
 			//remove old map overlay and create new one
-			GroundOverlay ppo = Field.prevoverlay;
-			Field.prevoverlay = field.createOverlay(map);
+//			GroundOverlay ppo = Field.prevoverlay;
+			field.createOverlay();
 			if (dem_visible) {
-				Field.prevoverlay.setTransparency(demAlpha);
+				demOverlay.setTransparency(demAlpha);
 			}
-			ppo.remove();
+//			ppo.remove();
 			currentlyDrawing = false;
 		}
 	}
@@ -611,44 +643,27 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 
 	public static void setDemAlpha(float a) {
 		demAlpha = a;
-		if (dem_visible) {
-			Field.prevoverlay.setTransparency(demAlpha);
-		} else {
-			Field.prevoverlay.setTransparency(1);
-		}
+		demOverlay.setTransparency(demAlpha);
 	}
 
 	public static void setCatchmentsAlpha(float a) {
 		pitsAlpha = a;
 		if (pitsOverlay != null) {
-			if (pits_visible) {
-				pitsOverlay.setTransparency(pitsAlpha);
-			} else {
-				pitsOverlay.setTransparency(1);
-			}
-		}
-	}
-
-	public static void setDelineationAlpha(float a) {
-		delineationAlpha = a;
-		if (delineationOverlay != null) {
-			if (delineation_visible) {
-				delineationOverlay.setTransparency(delineationAlpha);
-				delineationPolygon.setFillColor(Color.argb((int) (delineationAlpha*255), 1, 0, 0));
-			} else {
-				delineationOverlay.setVisible(delineation_visible);
-			}
+			pitsOverlay.setTransparency(pitsAlpha);
 		}
 	}
 
 	public static void setPuddleAlpha(float a) {
 		puddleAlpha = a;
 		if (puddleOverlay != null) {
-			if (puddle_visible) {
-				puddleOverlay.setTransparency(puddleAlpha);
-			} else {
-				puddleOverlay.setTransparency(1);
-			}
+			puddleOverlay.setTransparency(puddleAlpha);
+		}
+	}
+	
+	public static void setDelineationAlpha(float a) {
+		delineationAlpha = a;
+		if (delineationOverlay != null) {
+			delineationOverlay.setTransparency(delineationAlpha);
 		}
 	}
 
@@ -817,8 +832,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		if (!delineating) {
 			delineating = true;
 			delineationPoint = field.getXYFromLatLng(delineationMarker.getPosition());
-			selectedPitIndex = watershedDataset.pits.getIndexOf(watershedDataset.pits.pitIdMatrix[delineationPoint.y][delineationPoint.x]);
-			delineationMarker.setTitle(Integer.toString(watershedDataset.pits.pitIdMatrix[delineationPoint.y][delineationPoint.x]));
+			delineationMarkerOptions.position(delineationMarker.getPosition());
 			if (delineationPoint == null) {
 				Toast toast = Toast.makeText(context, "Location to delineate must be within bounded area.", Toast.LENGTH_SHORT);
 				toast.show();

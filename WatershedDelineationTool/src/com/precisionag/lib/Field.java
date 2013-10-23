@@ -37,7 +37,7 @@ public class Field {
 
 	static SupportMapFragment mapFragment;
 	public static SeekBar seekBar;
-	public static GroundOverlay prevoverlay;
+//	public static GroundOverlay prevoverlay;
 
 	//constructor method
 	public Field(Bitmap bitmap, LatLng southwest, LatLng northeast, double minHeight, double maxHeight) {
@@ -47,7 +47,7 @@ public class Field {
 		setFieldBounds(new LatLngBounds(sw, ne));
 		setMinElevation(minHeight);
 		maxElevation = maxHeight;
-		prevoverlay = createOverlay(mapFragment.getMap());
+		createOverlay();
 	}
 
 	//access methods
@@ -86,7 +86,7 @@ public class Field {
 	}
 
 	//creates an overlay view of the field on the specified map object
-	public GroundOverlay createOverlay(GoogleMap map) {
+	public void createOverlay() {
 		PolylineOptions rectOptions = new PolylineOptions()
 		.add(new LatLng(sw.latitude, ne.longitude))
 		.add(sw)
@@ -95,12 +95,13 @@ public class Field {
 		.add(new LatLng(sw.latitude, ne.longitude)); // Closes the polyline.
 		polyline = mapFragment.getMap().addPolyline(rectOptions);
 
-		GroundOverlay groundOverlay = map.addGroundOverlay(new GroundOverlayOptions()
+		MainActivity.demOverlayOptions = new GroundOverlayOptions()
 		.image(BitmapDescriptorFactory.fromBitmap(getElevationBitmap()))
 		.positionFromBounds(getFieldBounds())
-		.transparency(0));
-		groundOverlay.setVisible(true);
-		return groundOverlay;
+		.transparency(MainActivity.demAlpha)
+		.visible(MainActivity.dem_visible);
+		MainActivity.demOverlay = MainActivity.map.addGroundOverlay(MainActivity.demOverlayOptions);
+//		return groundOverlay;
 	}
 
 	public void updatePolyLine() {
@@ -172,7 +173,7 @@ public class Field {
 	}
 
 	public void updateColors() {
-		prevoverlay.remove();
+//		prevoverlay.remove();
 		int width = elevationBitmap.getWidth();
 		int height = elevationBitmap.getHeight();
 		int[] pixels = new int[width * height];
@@ -187,9 +188,9 @@ public class Field {
 		bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
 
 		//remove old map overlay and create new one
-		prevoverlay = createOverlay(mapFragment.getMap());
+//		prevoverlay = createOverlay(mapFragment.getMap());
 		if (MainActivity.dem_visible) {
-			prevoverlay.setTransparency(MainActivity.getAlpha());
+//			prevoverlay.setTransparency(MainActivity.getAlpha());
 		}
 
 	}

@@ -131,14 +131,6 @@ public class Pit implements Comparable{
 		
 		// Volume/elevation-dependent variables and calculations
 		retentionVolume = 0.0;
-//		for (int listIdx = 0; listIdx < allPointsList.size(); listIdx++) {
-//			Point currentPoint = new Point(allPointsList.get(listIdx));
-//			int r = currentPoint.y;
-//			int c = currentPoint.x;
-//			if (DEM[r][c] < spilloverElevation) {
-//				retentionVolume = retentionVolume + ((spilloverElevation-DEM[r][c])*cellSizeX*cellSizeY);
-//			}
-//		}
 		filledVolume = 0.0;
 		pitDrainageRate = Double.POSITIVE_INFINITY;
 		netAccumulationRate = (RainfallSimConfig.rainfallIntensity * allPointsList.size() * cellSizeX*cellSizeY) - pitDrainageRate;//cubic meters per hour          - pitDrainageRate
