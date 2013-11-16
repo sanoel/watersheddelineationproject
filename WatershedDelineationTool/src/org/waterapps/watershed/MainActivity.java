@@ -433,6 +433,8 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		
 		delineating = true;
 		delineationPoint = field.getXYFromLatLng(delineationMarker.getPosition());
+		delineationPoint = new Point(302, 315);
+		Log.w("delinpoint", delineationPoint.toString());
 		selectedPitIndex = watershedDataset.pits.getIndexOf(watershedDataset.pits.pitIdMatrix[delineationPoint.y][delineationPoint.x]);
 		showResultsFragment();
 		new DelineateWatershedTask(delineationPoint).execute();
@@ -832,7 +834,8 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		if (!delineating) {
 			delineating = true;
 			delineationPoint = field.getXYFromLatLng(delineationMarker.getPosition());
-			delineationMarkerOptions.position(delineationMarker.getPosition());
+			delineationMarkerOptions.position(delineationMarker.getPosition())
+									 .title(delineationPoint.toString());
 			if (delineationPoint == null) {
 				Toast toast = Toast.makeText(context, "Location to delineate must be within bounded area.", Toast.LENGTH_SHORT);
 				toast.show();
