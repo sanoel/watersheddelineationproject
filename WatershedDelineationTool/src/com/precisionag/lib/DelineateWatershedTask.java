@@ -19,10 +19,6 @@ import android.util.Log;
 import android.view.View;
 
 public class DelineateWatershedTask extends AsyncTask <String, Bitmap, Bitmap> implements DelineationListener {
-	int BUFFER_ONE = 0;
-	int BUFFER_TWO = 1;
-	int buffer = 0;
-	
 
 	public DelineateWatershedTask(Point delineationPoint) {
 	}
@@ -39,42 +35,6 @@ public class DelineateWatershedTask extends AsyncTask <String, Bitmap, Bitmap> i
 
 	@Override
 	protected void onProgressUpdate(Bitmap... values) {
-//		if (MainActivity.delineation_visible) {
-//			if(MainActivity.resultsFragment != null){
-//				MainActivity.resultsFragment.updateResults(1);
-//			}
-//			if (buffer == BUFFER_ONE) {
-//				if (MainActivity.delineationOverlay != null) {
-//					MainActivity.delineationOverlay.remove();
-//				}
-//				MainActivity.delineationOverlay = MainActivity.map.addGroundOverlay(new GroundOverlayOptions()
-//				.image(BitmapDescriptorFactory.fromBitmap(values[0]))
-//				.positionFromBounds(MainActivity.field.getFieldBounds())
-//				.transparency(MainActivity.delineationAlpha)
-//				.zIndex(1));
-//				MainActivity.delineationOverlay.setVisible(MainActivity.delineation_visible);
-//
-//				if (MainActivity.delineationOverlayBuffer != null) {
-//					MainActivity.delineationOverlayBuffer.remove();
-//				}
-//				buffer = BUFFER_TWO;
-//			} else if (buffer == BUFFER_TWO) {
-//				if (MainActivity.delineationOverlayBuffer != null) {
-//					MainActivity.delineationOverlayBuffer.remove();
-//				}
-//				MainActivity.delineationOverlayBuffer = MainActivity.map.addGroundOverlay(new GroundOverlayOptions()
-//				.image(BitmapDescriptorFactory.fromBitmap(values[0]))
-//				.positionFromBounds(MainActivity.field.getFieldBounds())
-//				.transparency(MainActivity.delineationAlpha)
-//				.zIndex(0));
-//				MainActivity.delineationOverlayBuffer.setVisible(MainActivity.delineation_visible);
-//
-//				if (MainActivity.delineationOverlay != null) {
-//					MainActivity.delineationOverlay.remove();
-//				}
-//				buffer = BUFFER_ONE;
-//			}
-//		}
 	}
 
 	protected void onPostExecute(Bitmap result) {
@@ -114,7 +74,7 @@ public class DelineateWatershedTask extends AsyncTask <String, Bitmap, Bitmap> i
 
 	@Override
 	public void delineationOnProgress(Bitmap bitmap) {
-		publishProgress(bitmap);		
+//		publishProgress(bitmap);		
 	}
 
 

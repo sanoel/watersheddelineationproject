@@ -29,11 +29,11 @@ public class WatershedDataset {
 	static int status = 0;
 	static String statusMessage = "Reading DEM";
 	public static float noDataVal;
-	public static int noDataCellsRemoved = 0;
+//	public static int noDataCellsRemoved = 0;
 	public static boolean fillAllPits = false;
 	public static int delineatedArea = 0;
 	public static double delineatedStorageVolume;
-	public ArrayList<LatLng> delineationCoords = new ArrayList<LatLng>();
+//	public ArrayList<LatLng> delineationCoords = new ArrayList<LatLng>();
 	WatershedDatasetListener listener;
 	DelineationListener delineationListener;
 	
@@ -132,7 +132,6 @@ public class WatershedDataset {
 	private float[][] removeDemNoData() {
 		int numrows = dem.length;
 		int numcols = dem[0].length;
-		noDataCellsRemoved = 0;
 		double distance;
 		double weight;
 		float[][] newDEM = dem;
@@ -167,8 +166,6 @@ public class WatershedDataset {
 						}
 						if (newDEM[r][c] == noDataVal) {
 							noDataCellsRemaining = true;
-						} else {
-							noDataCellsRemoved++;
 						}
 					}
 				}
@@ -273,18 +270,6 @@ public class WatershedDataset {
 				}
 				Point currentPoint = new Point(c, r);
 				ArrayList<Point> parentList = new ArrayList<Point>();
-				//				if (Math.abs(c - flowDirection[r][c].childPoint.x) > 1 || Math.abs(r - flowDirection[r][c].childPoint.y) > 1) {
-				//					Log.w("problemA", currentPoint.toString() + " " + flowDirection[r][c].childPoint.toString());
-				//				}
-				//				if (flowDirection[r][c].parentList != null) {
-				//					for (int i = 1; i < flowDirection[r][c].parentList.size(); i++) {
-				//						if (Math.abs(c - flowDirection[r][c].parentList.get(i).x) > 1 || Math.abs(r - flowDirection[r][c].parentList.get(i).y) > 1) {
-				//							Log.w("problemB", currentPoint.toString() + " " + flowDirection[r][c].parentList.get(i).toString());
-				//						}
-				//					}
-				//				} else {
-				//					Log.w("null parents", currentPoint.toString());
-				//				}
 
 				// Find all cells pointing to current cell. This comes after assuring that the current cell isn't on the border.
 				for (int x = -1; x < 2; x++) {
@@ -408,13 +393,11 @@ public class WatershedDataset {
 			// Volume/elevation-dependent variables and calculations
 			firstPit.filledVolume = secondPit.filledVolume + firstPit.retentionVolume;
 			firstPit.retentionVolume = firstPit.filledVolume;
-			//			firstPit.cellCountToBeFilled = 0;
 			for (int i = 0; i < firstPit.allPointsList.size(); i++) {
 				int r = firstPit.allPointsList.get(i).y;
 				int c = firstPit.allPointsList.get(i).x;
 				if (this.dem[r][c] < firstPit.spilloverElevation) {
 					firstPit.retentionVolume += ((firstPit.spilloverElevation - this.dem[r][c]) * cellSizeX * cellSizeY);
-					//					firstPit.cellCountToBeFilled++;
 				}
 			}
 
@@ -695,35 +678,35 @@ public class WatershedDataset {
 		return puddleBitmap;
 	}
 
-	public void drawFlowPaths() {
-		int numrows = dem.length;
-		int numcols = dem[0].length;
+//	public void drawFlowPaths() {
+//		int numrows = dem.length;
+//		int numcols = dem[0].length;
+//
+//		for (int r = 1; r < 50; r++) {
+//			for (int c = 1; c < numcols-1; c++) {
+//				if (r >= numrows-1 || r <= 0 || c >= numcols-1 || c <= 0) {
+//					continue;
+//				}
+//				LatLng parentLatLng = bitmapRowColToLatLng(r, c);
+//				LatLng childLatLng = bitmapRowColToLatLng(this.flowDirection[r][c].childPoint.y, this.flowDirection[r][c].childPoint.x);
+//				Polyline flowPath = MainActivity.map.addPolyline(new PolylineOptions()
+//				.add(parentLatLng, childLatLng)
+//				.color(Color.RED));
+//			}
+//		}
+//	}
 
-		for (int r = 1; r < 50; r++) {
-			for (int c = 1; c < numcols-1; c++) {
-				if (r >= numrows-1 || r <= 0 || c >= numcols-1 || c <= 0) {
-					continue;
-				}
-				LatLng parentLatLng = bitmapRowColToLatLng(r, c);
-				LatLng childLatLng = bitmapRowColToLatLng(this.flowDirection[r][c].childPoint.y, this.flowDirection[r][c].childPoint.x);
-				Polyline flowPath = MainActivity.map.addPolyline(new PolylineOptions()
-				.add(parentLatLng, childLatLng)
-				.color(Color.RED));
-			}
-		}
-	}
-
-	public LatLng bitmapRowColToLatLng(double r, double c) {
-		double xULCorner = TiffDecoder.nativeTiffGetCornerLongitude();
-		double yULCorner = TiffDecoder.nativeTiffGetCornerLatitude();
-
-		CoordinateConversion conversion = new CoordinateConversion();
-		String UTM = TiffDecoder.nativeTiffGetParams();
-		String UTMZone = UTM.substring(18, 20).concat(" ").concat(UTM.substring(20, 21)).concat(" ");
-		double x = xULCorner + (dem[0].length*cellSizeX) - c*cellSizeX;
-		double y = yULCorner - (r*cellSizeY);
-		double latLng[] = conversion.utm2LatLon(UTMZone + Integer.toString((int)x) + " " + Integer.toString((int)y));
-		LatLng latLong = new LatLng(latLng[0], latLng[1]);
-		return latLong;
-	}
+//	public LatLng bitmapRowColToLatLng(double r, double c) {
+//		double xULCorner = TiffDecoder.nativeTiffGetCornerLongitude();
+//		double yULCorner = TiffDecoder.nativeTiffGetCornerLatitude();
+//
+//		CoordinateConversion conversion = new CoordinateConversion();
+//		String UTM = TiffDecoder.nativeTiffGetParams();
+//		String UTMZone = UTM.substring(18, 20).concat(" ").concat(UTM.substring(20, 21)).concat(" ");
+//		double x = xULCorner + (dem[0].length*cellSizeX) - c*cellSizeX;
+//		double y = yULCorner - (r*cellSizeY);
+//		double latLng[] = conversion.utm2LatLon(UTMZone + Integer.toString((int)x) + " " + Integer.toString((int)y));
+//		LatLng latLong = new LatLng(latLng[0], latLng[1]);
+//		return latLong;
+//	}
 }

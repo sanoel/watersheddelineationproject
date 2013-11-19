@@ -18,6 +18,8 @@ public class ResultsPanelFragment extends Fragment{
 	private TextView depressionStorage;
 //    private WatershedDataset watershedDataset;
 	ResultsPanelFragmentListener listener;
+	int CLICKED_CATCHMENT= 0;
+	int CLICKED_WATERSHED = 1;
 	
 	public interface ResultsPanelFragmentListener {
 		public WatershedDataset ResultsPanelFragmentGetData();
@@ -39,10 +41,10 @@ public class ResultsPanelFragment extends Fragment{
 	
 	public void updateResults(int clickType) {
 //		watershedDataset = listener.ResultsPanelFragmentGetData();
-		if (clickType == 0) {
+		if (clickType == CLICKED_CATCHMENT) {
 			area.setText("Area: " + String.format("%.3f", MainActivity.watershedDataset.pits.pitDataList.get(MainActivity.selectedPitIndex).allPointsList.size()*0.000247105*TiffDecoder.nativeTiffGetScaleX()*TiffDecoder.nativeTiffGetScaleY())+ " acres");
 			depressionStorage.setText("Retention Volume: " + String.format("%.3f", MainActivity.watershedDataset.pits.pitDataList.get(MainActivity.selectedPitIndex).retentionVolume*0.000810713194) + " acre-feet");
-		} else {
+		} else if (clickType == CLICKED_WATERSHED) {
 			area.setText("Area: " + String.format("%.3f", MainActivity.watershedDataset.delineatedArea*0.000247105*TiffDecoder.nativeTiffGetScaleX()*TiffDecoder.nativeTiffGetScaleY())+ " acres");
 			depressionStorage.setText("Retention Volume: " + String.format("%.3f", MainActivity.watershedDataset.delineatedStorageVolume * 0.000810713194) + " acre-feet");
 		}

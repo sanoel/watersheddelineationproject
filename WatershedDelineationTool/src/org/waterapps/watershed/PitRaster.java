@@ -193,29 +193,7 @@ public class PitRaster {
 		return pitListIndex;
 	}
 
-	//	public Bitmap updatePitsBitmap() {
-	//		Bitmap.Config config = Bitmap.Config.ARGB_8888;
-	//		pitsBitmap = Bitmap.createBitmap(numcols, numrows, config);
-	//		for (int r = 0; r < numrows; r++) {
-	//			for (int c = 0; c < numcols; c++) {
-	//				if (r >= numrows - 1 || r <= 0 || c >= numcols - 1 || c <= 0) {
-	//					pitsBitmap.setPixel(numcols - 1 - c, r, Color.TRANSPARENT);
-	//					continue;
-	//				}
-	//				// verify that pitID exists
-	//				if (pitIdMatrix[r][c] <= -1) {
-	//					int currentPitColor = Color.TRANSPARENT;
-	//					pitsBitmap.setPixel(numcols - 1 - c, r, currentPitColor);
-	//				} else {
-	//					int currentPitColor = pitDataList.get(this.getIndexOf(pitIdMatrix[r][c])).color;
-	//					pitsBitmap.setPixel(numcols - 1 - c, r, currentPitColor);
-	//				}
-	//			}
-	//		}
-	//		return pitsBitmap;
-	//	}
-
-	public Bitmap updatePitsBitmapOutlines() {
+	public Bitmap highlightSelectedPit(int selectedPitIndex) {
 		//pass in maps object to draw on the map
 		//convert from cartesian to 
 		int[] colorarray = new int[this.pitIdMatrix.length*this.pitIdMatrix[0].length];

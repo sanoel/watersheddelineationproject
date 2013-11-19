@@ -44,6 +44,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.app.ActionBar;
@@ -67,7 +68,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends FragmentActivity implements OnMapClickListener, ProgressFragmentListener, OnMarkerDragListener, ResultsPanelFragmentListener, OnMarkerClickListener {
+public class MainActivity extends FragmentActivity implements OnMapClickListener, ProgressFragmentListener, OnMarkerDragListener, ResultsPanelFragmentListener {
 	ProgressFragmentListener pflistener;
 	private Uri fileUri;
 	LocationManager locationManager;
@@ -88,15 +89,6 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	private static final int INITIAL_LOAD = 6502;
 	public static int hsvColors[];
 	public static int hsvTransparentColors[];
-	int demStatus = 0;
-	int markerMode;
-	int numrows;
-	int numcols;
-	int wsdStatus = 0;
-	double xLLCorner;
-	double yLLCorner;
-	double cellSize;
-	double[][] DEM;
 	
 	public static boolean coloring;
 	public static boolean currentlyDrawing;
@@ -109,31 +101,25 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 
 	public static TextView wsdProgressText;
 	public static Button simulateButton;
-	public static Button delineateButton;
 	public static ProgressBar wsdProgressBar;
 	
 	public static GroundOverlay pitsOverlay;
-	public static GroundOverlay pitsOverlayBuffer;
 	public static GroundOverlay delineationOverlay;
 	public static GroundOverlay puddleOverlay;
 	public static GroundOverlay demOverlay;	
 	
 	public static GroundOverlayOptions pitsOverlayOptions;
-	public static GroundOverlayOptions pitsOverlayBufferOptions;
 	public static GroundOverlayOptions delineationOverlayOptions;
 	public static GroundOverlayOptions puddleOverlayOptions;
 	public static GroundOverlayOptions demOverlayOptions;
 	public static MarkerOptions delineationMarkerOptions;
 	
 	public static Marker delineationMarker;
-	static Polygon delineationPolygon;
+//	static Polygon delineationPolygon;
 	static ArrayList<Polyline> demOutlines;
 
 	public static Point delineationPoint;
 	public static Point clickedPoint;
-	LatLng sw;
-	LatLng ne;
-	LatLngBounds fieldBounds;
 	public static LatLngBounds demBounds;
 	
 
@@ -149,6 +135,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+//		Debug.startMethodTracing();
 		demOutlines = new ArrayList<Polyline>();
 		setContentView(R.layout.main_activity);
 		SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -156,7 +143,6 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
 		map.setMyLocationEnabled(true);
 		map.setOnMarkerDragListener(this);
-		map.setOnMarkerClickListener(this);
 		map.setOnMapClickListener(this);
 		Field.setMapFragment(mapFragment);
 		Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.watershedelineation);
@@ -170,7 +156,6 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		RainfallSimConfig.setDepth(Float.parseFloat(prefs.getString("pref_rainfall_amount", "1.0f")));
 		demDirectory = prefs.getString("dem_dir", Environment.getExternalStorageDirectory().toString() + "/dem");
-		markerMode = 0;
 		coloring = true;
 		currentlyDrawing = false;
 		setDemAlpha(1 - (float) prefs.getInt("pref_key_dem_trans_level", 50) / 100.0f);
@@ -178,15 +163,10 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		setPuddleAlpha(1 - (float) prefs.getInt("pref_key_puddle_trans_level", 50) / 100.0f);
 		setCatchmentsAlpha(1 - (float) prefs.getInt("pref_key_catchments_trans_level", 50) / 100.0f);
 		
-//		setPuddlesVisibility(prefs.getBoolean("pref_key_puddle_vis", true));
-//		setDemVisibility(prefs.getBoolean("pref_key_dem_vis", true));
-//		setDelineationVisibility(prefs.getBoolean("pref_key_delin_vis", true));
-//		setCatchmentsVisibility(prefs.getBoolean("pref_key_pits_vis", true));
-		
 		dem_visible = true;
-		pits_visible = true;
-		puddle_visible = true;
-		delineation_visible = true;
+		pits_visible = false;
+		puddle_visible = false;
+		delineation_visible = false;
 
 		hsvColors = new int[256];
 		hsvTransparentColors = new int[256];
@@ -245,10 +225,14 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	}
 
 	public void onMapClick (LatLng point) {
-		if (watershedDataset.pits.pitIdMatrix != null) {
+		if (pits_visible) {
 			clickedPoint = field.getXYFromLatLng(point);
 			if (clickedPoint != null) {
+//				if (delinBitmap.getPixel(numcols - 1 - clickedPoint.x, clickedPoint.y) == Color.RED) {
+//					resultsFragment.updateResults(1);
+//				} else {
 				selectedPitIndex = watershedDataset.pits.getIndexOf(watershedDataset.pits.pitIdMatrix[clickedPoint.y][clickedPoint.x]);
+//				watershedDataset.pits.highlightSelectedPit(selectedPitIndex);
 				resultsFragment.updateResults(0);
 			}
 		}
@@ -394,7 +378,6 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	@Override
 	public void ProgressFragmentDone(WatershedDataset watershedDataset) {
 		MainActivity.watershedDataset = watershedDataset;
-		//		hideProgressFragment();
 		getActionBar().show();
 		getActionBar().setTitle("Watershed Delineation");
 		MenuItem mi = myMenu.findItem(R.id.menu_catchments);
@@ -415,6 +398,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		.visible(pits_visible)
 		.zIndex(1);
 		pitsOverlay = map.addGroundOverlay(pitsOverlayOptions);
+		pits_visible = true;
 
 		puddleOverlayOptions = new GroundOverlayOptions()
 		.image(BitmapDescriptorFactory.fromBitmap(watershedDataset.drawPuddles()))
@@ -424,6 +408,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		.zIndex(2);
 		puddleOverlay = map.addGroundOverlay(puddleOverlayOptions);
 		puddleOverlay.setVisible(puddle_visible);
+		puddle_visible = true;
 		
 		LatLng midfield = new LatLng((MainActivity.field.getFieldBounds().southwest.latitude + MainActivity.field.getFieldBounds().northeast.latitude)/2.0, (MainActivity.field.getFieldBounds().southwest.longitude + MainActivity.field.getFieldBounds().northeast.longitude)/2.0);
 		delineationMarkerOptions = new MarkerOptions()
@@ -438,7 +423,9 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		selectedPitIndex = watershedDataset.pits.getIndexOf(watershedDataset.pits.pitIdMatrix[delineationPoint.y][delineationPoint.x]);
 		showResultsFragment();
 		new DelineateWatershedTask(delineationPoint).execute();
+		delineation_visible = true;
 		delineating = false;
+//		Debug.stopMethodTracing();
 	}
 
 	private void showProgressFragment(){
@@ -458,16 +445,14 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		ft.remove(fragment);
 		ft.commit();
 		progressFragment = null;
-		//		drawCatchmentPolygons();
 	}
 
 	public interface ProgressFragmentListener {
 		public WatershedDataset ProgressFragmentGetData();
-		//		public void ProgressFragmentOnProgress();
 		public void ProgressFragmentDone(WatershedDataset watershedDataset);
-		//put functions in here to save any changes to the results views
 	}
-
+	
+	//Rainfall Simulation Asynchronous Task
 	private class RunSimulation extends AsyncTask<WatershedDataset, Object, WatershedDataset> implements WatershedDataset.WatershedDatasetListener {
 		protected void onPreExecute() {
 			super.onPreExecute();
@@ -478,41 +463,12 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 			// Background Work
 			inputWds[0].setTask(this);
 			if (inputWds[0].fillPits() != true) {
-				// fillPits failed!
 			}
 			return inputWds[0];
 		}
 
 		@Override
 		protected void onProgressUpdate(Object... values) {
-			wsdProgressBar.setProgress((Integer) values[0]);
-			if (values[2] != null) {
-				if (MainActivity.pits_visible) {
-					if (MainActivity.pitsOverlay == null) {
-						MainActivity.pitsOverlay = MainActivity.map.addGroundOverlay(new GroundOverlayOptions()
-						.image(BitmapDescriptorFactory.fromBitmap((Bitmap) values[2]))
-						.positionFromBounds(MainActivity.field.getFieldBounds())
-						.transparency(MainActivity.pitsAlpha)
-						.zIndex(1));
-						MainActivity.pitsOverlay.setVisible(MainActivity.delineation_visible);
-
-						if (MainActivity.pitsOverlayBuffer != null) {
-							MainActivity.pitsOverlayBuffer.remove();
-						}
-					} else {
-						MainActivity.pitsOverlayBuffer = MainActivity.map.addGroundOverlay(new GroundOverlayOptions()
-						.image(BitmapDescriptorFactory.fromBitmap((Bitmap) values[2]))
-						.positionFromBounds(MainActivity.field.getFieldBounds())
-						.transparency(MainActivity.pitsAlpha)
-						.zIndex(0));
-						MainActivity.pitsOverlayBuffer.setVisible(MainActivity.delineation_visible);
-
-						if (MainActivity.pitsOverlay != null) {
-							MainActivity.pitsOverlay.remove();
-						}
-					}
-				}
-			}
 		}
 
 		protected void onPostExecute(WatershedDataset result) {
@@ -525,7 +481,6 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 			Object[] array = new Object[3];
 			array[0] = progress;
 			array[1] = status;
-			//			array[2] = bitmap;
 			publishProgress(array);
 		}
 
@@ -561,83 +516,6 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	public WatershedDataset ResultsPanelFragmentGetData() {
 		return watershedDataset;
 	}
-
-	protected void onActivityResult (int requestCode, int resultCode, Intent data) {
-		//handle data from file manager
-
-		if (requestCode == FIRST_START) {
-			loadInitialDEM();
-			return;
-		}
-		System.out.print("Intent Handler");
-		System.out.print(data);
-
-		if (data != null) {
-			if (data.getData().toString().contains(".tif")) {
-				fileUri = data.getData();
-				java.net.URI juri = null;
-				try {
-					juri = new java.net.URI(fileUri.getScheme(),
-							fileUri.getSchemeSpecificPart(),
-							fileUri.getFragment());
-				} catch (URISyntaxException e) {
-					e.printStackTrace();
-				}
-				ElevationRaster raster = new ElevationRaster();
-				String filename = fileUri.getPath().split("/")[fileUri.getPath().split("/").length-1];
-				new ReadElevationRasterTask(this, raster, filename).execute(juri);
-				SharedPreferences.Editor editor = prefs.edit();
-				editor.putString("last_dem", fileUri.getPath());
-				editor.commit();
-
-				setCurrentlyLoaded(prefs.getString("last_dem", "foo"));
-				return;
-			}
-		}
-		if (requestCode == INITIAL_LOAD && data == null) {
-			raster = new ElevationRaster();
-			DemFile demToLoad = dems.get(0);
-			String filename = demToLoad.getFilename();
-			new ReadElevationRasterTask(this, raster, filename).execute(demToLoad.getFileUri());
-		}
-	}
-
-	public static void onFileRead(ElevationRaster inputRaster) {
-		field.setBitmap(inputRaster.getBitmap());
-		field.setBounds(inputRaster.getBounds());
-
-		map.animateCamera(CameraUpdateFactory.newLatLngBounds(inputRaster.getBounds(), 50));
-		field.updatePolyLine();
-		updateColors(field);
-		new LoadWatershedDatasetTask(inputRaster).execute();
-	}
-
-	public static void updateColors(Field field) {
-		if (!currentlyDrawing) {
-			currentlyDrawing = true;
-			int width = field.getElevationBitmap().getWidth();
-			int height = field.getElevationBitmap().getHeight();
-			int[] pixels = new int[width * height];
-			field.getElevationBitmap().getPixels(pixels, 0, width, 0, 0, width, height);
-			Bitmap bitmap = field.getElevationBitmap().copy(field.getElevationBitmap().getConfig(), true);
-			int c;
-			for (int i = 0; i < (width * height); i++) {
-				c=pixels[i] & 0xFF;
-				pixels[i] =  hsvColors[c];
-			}
-			bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
-			field.setBitmap(bitmap);
-			//remove old map overlay and create new one
-//			GroundOverlay ppo = Field.prevoverlay;
-			field.createOverlay();
-			if (dem_visible) {
-				demOverlay.setTransparency(demAlpha);
-			}
-//			ppo.remove();
-			currentlyDrawing = false;
-		}
-	}
-
 
 	public static float getAlpha() {
 		return demAlpha;
@@ -760,6 +638,82 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 			}
 		}
 	}
+	
+	protected void onActivityResult (int requestCode, int resultCode, Intent data) {
+		//handle data from file manager
+
+		if (requestCode == FIRST_START) {
+			loadInitialDEM();
+			return;
+		}
+		System.out.print("Intent Handler");
+		System.out.print(data);
+
+		if (data != null) {
+			if (data.getData().toString().contains(".tif")) {
+				fileUri = data.getData();
+				java.net.URI juri = null;
+				try {
+					juri = new java.net.URI(fileUri.getScheme(),
+							fileUri.getSchemeSpecificPart(),
+							fileUri.getFragment());
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+				ElevationRaster raster = new ElevationRaster();
+				String filename = fileUri.getPath().split("/")[fileUri.getPath().split("/").length-1];
+				new ReadElevationRasterTask(this, raster, filename).execute(juri);
+				SharedPreferences.Editor editor = prefs.edit();
+				editor.putString("last_dem", fileUri.getPath());
+				editor.commit();
+
+				setCurrentlyLoaded(prefs.getString("last_dem", "foo"));
+				return;
+			}
+		}
+		if (requestCode == INITIAL_LOAD && data == null) {
+			raster = new ElevationRaster();
+			DemFile demToLoad = dems.get(0);
+			String filename = demToLoad.getFilename();
+			new ReadElevationRasterTask(this, raster, filename).execute(demToLoad.getFileUri());
+		}
+	}
+
+	public static void onFileRead(ElevationRaster inputRaster) {
+		field.setBitmap(inputRaster.getBitmap());
+		field.setBounds(inputRaster.getBounds());
+
+		map.animateCamera(CameraUpdateFactory.newLatLngBounds(inputRaster.getBounds(), 50));
+		field.updatePolyLine();
+		updateColors(field);
+		new LoadWatershedDatasetTask(inputRaster).execute();
+	}
+
+	public static void updateColors(Field field) {
+		if (!currentlyDrawing) {
+			currentlyDrawing = true;
+			int width = field.getElevationBitmap().getWidth();
+			int height = field.getElevationBitmap().getHeight();
+			int[] pixels = new int[width * height];
+			field.getElevationBitmap().getPixels(pixels, 0, width, 0, 0, width, height);
+			Bitmap bitmap = field.getElevationBitmap().copy(field.getElevationBitmap().getConfig(), true);
+			int c;
+			for (int i = 0; i < (width * height); i++) {
+				c=pixels[i] & 0xFF;
+				pixels[i] =  hsvColors[c];
+			}
+			bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+			field.setBitmap(bitmap);
+			//remove old map overlay and create new one
+//			GroundOverlay ppo = Field.prevoverlay;
+			field.createOverlay();
+			if (dem_visible) {
+				demOverlay.setTransparency(demAlpha);
+			}
+//			ppo.remove();
+			currentlyDrawing = false;
+		}
+	}
 
 	//copies a file from assets to SD
 	private void copyAssets() {
@@ -826,16 +780,10 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	}
 
 	@Override
-	public void onMarkerDrag(Marker marker) {
-	}
-
-	@Override
 	public void onMarkerDragEnd(Marker marker) {
 		if (!delineating) {
 			delineating = true;
 			delineationPoint = field.getXYFromLatLng(delineationMarker.getPosition());
-			delineationMarkerOptions.position(delineationMarker.getPosition())
-									 .title(delineationPoint.toString());
 			if (delineationPoint == null) {
 				Toast toast = Toast.makeText(context, "Location to delineate must be within bounded area.", Toast.LENGTH_SHORT);
 				toast.show();
@@ -843,19 +791,18 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 				if(resultsFragment == null || resultsFragment.isVisible() == false){
 					showResultsFragment();
 				}
+				delineationMarkerOptions.position(delineationMarker.getPosition())
+				.title(delineationPoint.toString());
 				new DelineateWatershedTask(delineationPoint).execute();			
 			}
 		}
 		delineating = false;
 	}
-
 	@Override
-	public void onMarkerDragStart(Marker marker) {
+	public void onMarkerDrag(Marker marker) {		
+	}
+	@Override
+	public void onMarkerDragStart(Marker marker) {		
 	}
 
-	@Override
-	public boolean onMarkerClick(Marker arg0) {
-		resultsFragment.updateResults(1);
-		return false;
-	}
 }

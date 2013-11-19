@@ -8,7 +8,6 @@ import android.graphics.Point;
 public class Pit implements Comparable{
 	// single pit cell variables
 	int pitId;
-//	Point pitBottomPoint;
 	int color;
 	// Whole pit depression variables
 	List<Point> allPointsList;
@@ -22,7 +21,6 @@ public class Pit implements Comparable{
 	double retentionVolume;
 	double filledVolume;
 	double spilloverTime;
-//	int cellCountToBeFilled; // at spillover, the area of inundated cells (# of cells)	
 	double pitDrainageRate;
 	double netAccumulationRate;
 
