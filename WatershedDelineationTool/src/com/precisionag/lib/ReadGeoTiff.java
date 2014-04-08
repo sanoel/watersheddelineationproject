@@ -55,8 +55,8 @@ public class ReadGeoTiff implements ReadElevationRaster {
 
         double width = scaleX*raster.getNrows()/(111111.0);
         double height = scaleY*raster.getNcols()/(111111.0*Math.cos(Math.toRadians(latLng[0])));
-        raster.setLowerLeft(new LatLng(latLng[0]-width, latLng[1]));
-        raster.setUpperRight(new LatLng(latLng[0], latLng[1]+height));
+        raster.setSouthWest(new LatLng(latLng[0]-width, latLng[1]));
+        raster.setNorthEast(new LatLng(latLng[0], latLng[1]+height));
         return raster;
     }
 

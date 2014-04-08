@@ -242,18 +242,18 @@ containing a value of this type.
         public static final int load_message=0x7f060010;
         public static final int map=0x7f06000a;
         public static final int menuCancel=0x7f06001b;
-        public static final int menuDone=0x7f060026;
+        public static final int menuDone=0x7f060027;
         public static final int menuSelect=0x7f06001a;
-        public static final int menu_catchments=0x7f060022;
-        public static final int menu_center=0x7f060020;
-        public static final int menu_choose_dem=0x7f06001e;
-        public static final int menu_delineation=0x7f060023;
-        public static final int menu_dem=0x7f060021;
+        public static final int menu_catchments=0x7f060023;
+        public static final int menu_center=0x7f060021;
+        public static final int menu_choose_dem=0x7f06001f;
+        public static final int menu_delineation=0x7f060024;
+        public static final int menu_dem=0x7f060022;
         public static final int menu_exit_help=0x7f06001c;
-        public static final int menu_help=0x7f060025;
+        public static final int menu_help=0x7f060026;
         public static final int menu_new_sim=0x7f06001d;
-        public static final int menu_puddles=0x7f060024;
-        public static final int menu_settings=0x7f06001f;
+        public static final int menu_puddles=0x7f060025;
+        public static final int menu_settings=0x7f060020;
         public static final int none=0x7f060000;
         public static final int normal=0x7f060001;
         public static final int preview_message=0x7f060011;
@@ -268,6 +268,7 @@ containing a value of this type.
         public static final int seekBarPrefUnitsRight=0x7f060016;
         public static final int seekBarPrefValue=0x7f060017;
         public static final int terrain=0x7f060003;
+        public static final int test=0x7f06001e;
         public static final int upIcon=0x7f060008;
     }
     public static final class integer {

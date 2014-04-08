@@ -5,6 +5,11 @@
     android:showAsAction="never"
     android:title="Run New Rainfall Simulation"
     android:visible="false"/>
+ <item
+        android:id="@+id/test"
+        android:showAsAction="never"
+        android:title="superbutton"/>
+    
 
     <item
         android:id="@+id/menu_choose_dem"

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Watershed Delineation Help</title>
+</head>
+<body>
+
+<h1>First Startup</h1>
+<p>You have opened the Watershed Delineation App for the first time! Below are details and instructions for the app.  They may also be accessed from the Action Bar Overflow Menu > Help.</p>
+<h2>About the app</h2>
+<p>The purpose of this app is to assist users with watershed delineation and visualization while in the field.  Watershed delineation is the act of finding the contributing area that flows to a point and drawing, or delineating, that area with a polygon.  Although many usage scenarios are possible, understand that this app is not intended for large-scale watershed analyses and is not currently capable of handling vast land areas (i.e. delineating in a stream).</p>
+<h2><a href="HowtoloadDEMs.html">How to get DEMs</a></h2>
+<p>Upon opening the app, a DEM must be selected.  After selecting a DEM, a different DEM may be chosen via the Action Bar Overflow Menu > Choose DEM. Alternatively, all DEMs in the dem folder are displayed on the map with a red outline.  Simply click within the outline to load the DEM.  The folder that accesses these DEM files may be respecified by going to Settings > Choose DEM Folder.   </p>
+<h2>Simulate Rainfall Button</h2>
+<p>This button simulates the desired rainfall event. To adjust the rainfall event to be simulated, go to Setting and adjust the value under Rainfall Event Settings.</p>
+<h2>Rainfall Event Settings</h2>
+The "Fill all pits" checkbox refers to a standard function on GIS software, but for more advanced adjustment, specify a rainfall event to be simulated.  Edit this field with a rainfall amount in inches. 
+<h2>Catchment Map</h2>
+<p>After the rainfall event has been simulated by clicking the Simulate Rainfall button, a map of watersheds (or catchments/subcatchments) is produced.  Polygons represent areas that drain internally while areas that are not delineated by a polygon drain off of the map.  If no polygons exist, then the entire DEM drains off of the map.  The "Fill all depressions" button guarantees this to happen; rainfall continues until all puddles fill up, and overflow off of map.</p>
+<h2>Delineation</h2>
+<p>After rainfall has been simulated and the catchment map has been shown, a marker appears so that the user may begin to delineate watersheds at specific locations.  Simply drag this marker to the desired location and click the Delineate button.  The contributing area will be delineated on the map colored in red while an area value in acres for that polygon will be shown on the Results panel.</p>
+<h2>Other Settings</h2>
+<p>Through the Settings screen, transparency levels of the overlays may be adjusted using the sliders.  These layers may also be turned on or off at any time using the check boxes on the Action Bar Overflow Menu.</p>
+
+
+</body>
+</html> 

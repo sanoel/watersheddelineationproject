@@ -42,125 +42,63 @@ public class PitRaster {
 		numrows = flowDirection.length;
 		numcols = flowDirection[0].length;
 		pitIdMatrix = new int[numrows][numcols];
-		for (int r = 0; r < numrows; r++) {
-			for (int c = 0; c < numcols; c++) {
-				pitIdMatrix[r][c] = -1;
-			}
-		}
-		pitDataList = new ArrayList<Pit>(pitCellCount);
+		pitDataList = new ArrayList<Pit>(pitCellCount + (numrows*2) + (numcols*2) - 4);
 		maxPitId = -1;
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inPurgeable = true;
 		options.inInputShareable = true;
-		
 		Bitmap icon = BitmapFactory.decodeResource(MainActivity.context.getResources(), R.drawable.watershedelineation, options);
 		pitsBitmap = Bitmap.createScaledBitmap(icon, numcols, numrows, false);
 		
-//		Bitmap.Config config = Bitmap.Config.ARGB_8888;
-//		pitsBitmap = Bitmap.createBitmap(numcols, numrows, config);
-		for (int c = numcols-1; c > -1; c--) {
+		//identify catchments raster
+//		Random random = new Random();
+		for (int c = 0; c < numcols; c++) {
 			for (int r = 0; r < numrows; r++) {
-				// Boundary cells and those pits along the edge that do not
-				// belong to a pit because they flow off the edge and not into a
-				// pit should be marked with a negative pit ID.
-				if (r == numrows - 1 || r == 0 || c == numcols - 1 || c == 0) {
-					continue;
-				}
-				if (flowDirection[r][c].childPoint.y < 0) {
+				// Edge cells were marked with a null flow direction child.  Identify each edge cell and 
+				// those cells that flow to it as a unique pit with a negative id.  
+				if (flowDirection[r][c].childPoint == null) {
+					minPitId--;
+					Point pitPoint = new Point(c, r);
+//					int red = random.nextInt(255);
+//					int green = random.nextInt(255);
+//					int blue = random.nextInt(255);
+//					int pitColor = Color.rgb(red,green,blue);
+//					List<Point> indicesDrainingToPit = findCellsDrainingToPoint(flowDirection, pitPoint, minPitId, pitColor);
+					List<Point> indicesDrainingToPit = findCellsDrainingToPoint(flowDirection, pitPoint, minPitId);
+//					Pit currentPit = new Pit(indicesDrainingToPit, pitColor, minPitId);
+					Pit currentPit = new Pit(indicesDrainingToPit, minPitId);
+					pitDataList.add(currentPit);
+				} else if (flowDirection[r][c].childPoint.y < 0) {
 					maxPitId++;
 					Point pitPoint = new Point(c, r);
-					Random random = new Random();
-					int red = random.nextInt(255);
-					int green = random.nextInt(255);
-					int blue = random.nextInt(255);
-					int pitColor = Color.rgb(red,green,blue);
-					List<Point> indicesDrainingToPit = findCellsDrainingToPoint(flowDirection, pitPoint, maxPitId, pitColor);
-					Pit currentPit = new Pit(indicesDrainingToPit, pitColor, maxPitId);
+//					int red = random.nextInt(255);
+//					int green = random.nextInt(255);
+//					int blue = random.nextInt(255);
+//					int pitColor = Color.rgb(red,green,blue);
+//					List<Point> indicesDrainingToPit = findCellsDrainingToPoint(flowDirection, pitPoint, maxPitId, pitColor);
+					List<Point> indicesDrainingToPit = findCellsDrainingToPoint(flowDirection, pitPoint, maxPitId);
+//					Pit currentPit = new Pit(indicesDrainingToPit, pitColor, maxPitId);
+					Pit currentPit = new Pit(indicesDrainingToPit, maxPitId);
 					pitDataList.add(currentPit);
 				}
 			}
-			status = (int) (40 + (25 * ((((numrows*numcols)-(c*numrows)))/((double) numrows*numcols))));
-			listener.watershedDatasetOnProgress(status, "Locating Surface Depressions", null);
+			status = (int) (40 + (25 * ((((c*numrows)))/((float) numrows*numcols))));
+			listener.simulationOnProgress(status, "Locating Surface Depressions");
 		}
 
 		// After identifying the pits matrix, gather pit data for each pit
 		for (int i = 0; i < pitDataList.size(); i++) {
-			pitDataList.get(i).completePitConstruction(null, inputCellSizeX, inputCellSizeY, dem, pitIdMatrix);
-			status = (int) (65 + (25 * (i/(double)pitDataList.size())));
-			listener.watershedDatasetOnProgress(status, "Computing Surface Depression Dimensions", null);
+			if (pitDataList.get(i).pitId > -1){
+				pitDataList.get(i).completePitConstruction(null, inputCellSizeX, inputCellSizeY, dem, pitIdMatrix);
+			} else {
+				pitDataList.get(i).completeNegativePitConstruction(null, inputCellSizeX, inputCellSizeY, dem, pitIdMatrix);
+			}
+			status = (int) (65 + (25 * (i/(float)pitDataList.size())));
+			listener.simulationOnProgress(status, "Computing Surface Depression Dimensions");
 		}
-		identifyEdgePits();
 	}
-
-	public void identifyEdgePits() {
-		int numrows = flowDirection.length;
-		int numcols = flowDirection[0].length;
-
-		Random random = new Random();
-		int red;
-		int green;
-		int blue;
-		int pitColor;
-
-		//left side
-		for (int r = 0; r < numrows; r++) {
-			minPitId--;
-			random = new Random();
-			red = random.nextInt(255);
-			green = random.nextInt(255);
-			blue = random.nextInt(255);
-			pitColor = Color.rgb(red,green,blue);
-			
-			List<Point> indicesDrainingToPit = findCellsDrainingToPoint(flowDirection, new Point(0, r), minPitId, pitColor);
-			Pit currentPit = new Pit(indicesDrainingToPit, pitColor, minPitId);
-			currentPit.completeNegativePitConstruction(null, inputCellSizeX, inputCellSizeY, dem, pitIdMatrix);
-			pitDataList.add(currentPit);
-		}
-
-		//bottom side
-		for (int c = 1; c < numcols-2; c++) { // 1 cell inside of DEM borders to avoid overlap of going down the rows on either side
-			minPitId--;
-			red = random.nextInt(255);
-			green = random.nextInt(255);
-			blue = random.nextInt(255);
-			pitColor = Color.rgb(red,green,blue);
-			
-			List<Point> indicesDrainingToPit = findCellsDrainingToPoint(flowDirection, new Point(c, numrows-1), minPitId, pitColor);
-			Pit currentPit = new Pit(indicesDrainingToPit, pitColor, minPitId);
-			currentPit.completeNegativePitConstruction(null, inputCellSizeX, inputCellSizeY, dem, pitIdMatrix);
-			pitDataList.add(currentPit);
-		}
-
-		//right side
-		for (int r = 0; r < numrows; r++) {
-			minPitId--;
-			red = random.nextInt(255);
-			green = random.nextInt(255);
-			blue = random.nextInt(255);
-			pitColor = Color.rgb(red,green,blue);
-			
-			List<Point> indicesDrainingToPit = findCellsDrainingToPoint(flowDirection, new Point(numcols-1, r), minPitId, pitColor);
-			Pit currentPit = new Pit(indicesDrainingToPit, pitColor, minPitId);
-			currentPit.completeNegativePitConstruction(null, inputCellSizeX, inputCellSizeY, dem, pitIdMatrix);
-			pitDataList.add(currentPit);
-		}
-
-		//top side
-		for (int c = 1; c < numcols-2; c++) { // 1 cell inside of DEM borders to avoid overlap of 
-			minPitId--;
-			red = random.nextInt(255);
-			green = random.nextInt(255);
-			blue = random.nextInt(255);
-			pitColor = Color.rgb(red,green,blue);
-			
-			List<Point> indicesDrainingToPit = findCellsDrainingToPoint(flowDirection, new Point(c, 0), minPitId, pitColor);
-			Pit currentPit = new Pit(indicesDrainingToPit, pitColor, minPitId);
-			currentPit.completeNegativePitConstruction(null, inputCellSizeX, inputCellSizeY, dem, pitIdMatrix);
-			pitDataList.add(currentPit);			
-		}		
-	}
-
-	public List<Point> findCellsDrainingToPoint(FlowDirectionCell[][] flowDirection, Point pitPoint, int pitId, int pitColor) {
+//	public List<Point> findCellsDrainingToPoint(FlowDirectionCell[][] flowDirection, Point pitPoint, int pitId, int pitColor) {
+	public List<Point> findCellsDrainingToPoint(FlowDirectionCell[][] flowDirection, Point pitPoint, int pitId) {
 		List<Point> indicesDrainingToPit = new ArrayList<Point>();
 		indicesDrainingToPit.add(pitPoint);
 		List<Point> indicesToCheck = new ArrayList<Point>();
@@ -169,7 +107,7 @@ public class PitRaster {
 			int r = indicesToCheck.get(0).y;
 			int c = indicesToCheck.get(0).x;
 			pitIdMatrix[r][c] = pitId;
-			pitsBitmap.setPixel(pitIdMatrix[0].length - 1 - c, r, pitColor);
+//			pitsBitmap.setPixel(pitIdMatrix[0].length - 1 - c, r, pitColor);
 			indicesToCheck.remove(0);
 
 			if (flowDirection[r][c].parentList.isEmpty()) {
@@ -194,19 +132,11 @@ public class PitRaster {
 	}
 
 	public Bitmap highlightSelectedPit(int selectedPitIndex) {
-		//pass in maps object to draw on the map
-		//convert from cartesian to 
-		int[] colorarray = new int[this.pitIdMatrix.length*this.pitIdMatrix[0].length];
-		Arrays.fill(colorarray, Color.TRANSPARENT);
-		Bitmap.Config config = Bitmap.Config.ARGB_8888;
-		pitsBitmap = Bitmap.createBitmap(colorarray, numcols, numrows, config);
-		pitsBitmap = pitsBitmap.copy(config, true);
-		for (int i = 0; i < this.pitDataList.size(); i++) {
-			Pit currentPit = this.pitDataList.get(i);
-			for (int j = 0 ; j < currentPit.pitBorderIndicesList.size(); j++) {
-				pitsBitmap.setPixel(pitIdMatrix[0].length - 1 - currentPit.pitBorderIndicesList.get(j).x, currentPit.pitBorderIndicesList.get(j).y, currentPit.color);
-			}
+		Bitmap highlightedPitBitmap = Bitmap.createBitmap(pitsBitmap);;
+		Pit selectedPit = this.pitDataList.get(selectedPitIndex);
+		for (int i = 0; i < selectedPit.pitBorderIndicesList.size(); i++) {
+			highlightedPitBitmap.setPixel(pitIdMatrix[0].length - 1 - selectedPit.pitBorderIndicesList.get(i).x, selectedPit.pitBorderIndicesList.get(i).y, Color.BLACK);
 		}
-		return pitsBitmap;
+		return highlightedPitBitmap;
 	}	
 }

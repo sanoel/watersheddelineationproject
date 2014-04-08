@@ -47,8 +47,6 @@ public class ReadElevationRasterTask extends AsyncTask <URI, Integer, ElevationR
 		ReadElevationRaster readObject = null;
 		
 		//select proper reader for filetype
-		if (params[0].getPath().contains(".hdr")) readObject = new ReadGridFloat();
-//        Log.i("geotiff", "About to read geotiff");
         if (params[0].getPath().contains(".tif")) readObject = new ReadGeoTiff();
 		data = readObject.readFromFile(params[0]);
 		publishProgress(100);

@@ -16,7 +16,6 @@ import com.filebrowser.DataFileChooser;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
@@ -27,27 +26,24 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polygon;
-import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import org.gdal.gdal.gdal;
 import org.waterapps.watershed.HelpActivity;
 import org.waterapps.watershed.R;
 import org.waterapps.watershed.ProgressFragment.ProgressFragmentListener;
 import org.waterapps.watershed.ResultsPanelFragment.ResultsPanelFragmentListener;
 
 import com.precisionag.lib.*;
-import com.tiffdecoder.TiffDecoder;
-
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Debug;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.app.ActionBar;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -135,39 +131,55 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-//		Debug.startMethodTracing();
-		demOutlines = new ArrayList<Polyline>();
 		setContentView(R.layout.main_activity);
+		context = this;
+		// Create Map
 		SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 		map = mapFragment.getMap();
 		map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
 		map.setMyLocationEnabled(true);
 		map.setOnMarkerDragListener(this);
 		map.setOnMapClickListener(this);
-		Field.setMapFragment(mapFragment);
-		Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.watershedelineation);
-		field = new Field(bitmap, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0), 0.0, 0.0);
-
 		UiSettings uiSettings = map.getUiSettings();
 		uiSettings.setRotateGesturesEnabled(false);
 		uiSettings.setTiltGesturesEnabled(false);
 		uiSettings.setZoomControlsEnabled(false);
-		context = this;
+        gdal.AllRegister();
+		
+		// Create array of DEM outlines to be shown and clickable on the map
+		demOutlines = new ArrayList<Polyline>();
+		scanDEMs();
+		
+		// Create a new Field object and hand it a template bitmap to help initialize (this works better than creating one from scratch)
+		Field.setMapFragment(mapFragment);
+		Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.watershedelineation);
+		field = new Field(bitmap, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0), 0.0, 0.0);
+
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		RainfallSimConfig.setDepth(Float.parseFloat(prefs.getString("pref_rainfall_amount", "1.0f")));
 		demDirectory = prefs.getString("dem_dir", Environment.getExternalStorageDirectory().toString() + "/dem");
 		coloring = true;
 		currentlyDrawing = false;
+		
+		// Set inital transparency and visibility toggle setting
 		setDemAlpha(1 - (float) prefs.getInt("pref_key_dem_trans_level", 50) / 100.0f);
 		setDelineationAlpha(1 - (float) prefs.getInt("pref_key_delin_trans_level", 50) / 100.0f);
 		setPuddleAlpha(1 - (float) prefs.getInt("pref_key_puddle_trans_level", 50) / 100.0f);
 		setCatchmentsAlpha(1 - (float) prefs.getInt("pref_key_catchments_trans_level", 50) / 100.0f);
-		
 		dem_visible = true;
 		pits_visible = false;
 		puddle_visible = false;
 		delineation_visible = false;
+		
+		Runtime rt = Runtime.getRuntime();
+		long maxMemory = rt.maxMemory();
+		Log.v("onCreate", "maxMemory:" + Long.toString(maxMemory));
 
+		ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+		int memoryClass = am.getMemoryClass();
+		Log.v("onCreate", "memoryClass:" + Integer.toString(memoryClass));
+		
+		// Get colors for DEM coloring (I think)
 		hsvColors = new int[256];
 		hsvTransparentColors = new int[256];
 		float hsvComponents[] = {1.0f, 0.75f, 0.75f};
@@ -176,8 +188,6 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 			hsvColors[i] = HSVToColor(hsvComponents);
 			hsvTransparentColors[i] = HSVToColor(128, hsvComponents);
 		}
-
-		scanDEMs();
 
 		//show help on first app start
 		firstStart = prefs.getBoolean("first_start", true);
@@ -232,23 +242,34 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 //					resultsFragment.updateResults(1);
 //				} else {
 				selectedPitIndex = watershedDataset.pits.getIndexOf(watershedDataset.pits.pitIdMatrix[clickedPoint.y][clickedPoint.x]);
-//				watershedDataset.pits.highlightSelectedPit(selectedPitIndex);
+				pitsOverlay.remove();
+				pitsOverlayOptions = new GroundOverlayOptions()
+				.image(BitmapDescriptorFactory.fromBitmap(watershedDataset.pits.highlightSelectedPit(selectedPitIndex)))
+				.positionFromBounds(field.getFieldBounds())
+				.transparency(pitsAlpha)
+				.visible(pits_visible)
+				.zIndex(1);
+				pitsOverlay = map.addGroundOverlay(pitsOverlayOptions);
+				pits_visible = true;
 				resultsFragment.updateResults(0);
 			}
 		}
 
 		//load DEM if clicked on
 		DemFile dem;
-		for(int i = 0; i<dems.size(); i++) {
-			dem = dems.get(i);
-			if ( (currentlyLoaded == null) || !dem.getFilename().equals(currentlyLoaded.getFilename())) {
-				if(dem.getBounds().contains(point)) {
-					currentlyLoaded = dem;
-					raster = new ElevationRaster();
-					new ReadElevationRasterTask(this, raster, dem.getFilename()).execute(dem.getFileUri());
-					SharedPreferences.Editor editor = prefs.edit();
-					editor.putString("last_dem", dem.getFileUri().getPath());
-					editor.commit();
+		if (currentlyLoaded.getBounds().contains(point)) {
+		} else {
+			for(int i = 0; i<dems.size(); i++) {
+				dem = dems.get(i);
+				if ( (currentlyLoaded == null) || !dem.getFilename().equals(currentlyLoaded.getFilename())) {
+					if(dem.getBounds().contains(point)) {
+						currentlyLoaded = dem;
+						raster = new ElevationRaster();
+						new ReadElevationRasterTask(this, raster, dem.getFilename()).execute(dem.getFileUri());
+						SharedPreferences.Editor editor = prefs.edit();
+						editor.putString("last_dem", dem.getFileUri().getPath());
+						editor.commit();
+					}
 				}
 			}
 		}
@@ -268,7 +289,12 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Choose DEM Menu Item
-		if (item.getItemId() == R.id.menu_choose_dem) {
+		if (item.getItemId() == R.id.test) {
+			WatershedDataset.getCLU();
+//			WatershedDataset.Polygonize();
+			return true;
+		}
+		else if (item.getItemId() == R.id.menu_choose_dem) {
 			Intent i = new Intent(this, DataFileChooser.class);
 			i.putExtra("path", demDirectory);
 			startActivityForResult(i, 1);
@@ -391,6 +417,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		}
 		
 		//Show the pits on the field
+		pits_visible = true;
 		pitsOverlayOptions = new GroundOverlayOptions()
 		.image(BitmapDescriptorFactory.fromBitmap(watershedDataset.pits.pitsBitmap))
 		.positionFromBounds(field.getFieldBounds())
@@ -398,8 +425,8 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		.visible(pits_visible)
 		.zIndex(1);
 		pitsOverlay = map.addGroundOverlay(pitsOverlayOptions);
-		pits_visible = true;
 
+		puddle_visible = true;
 		puddleOverlayOptions = new GroundOverlayOptions()
 		.image(BitmapDescriptorFactory.fromBitmap(watershedDataset.drawPuddles()))
 		.positionFromBounds(field.getFieldBounds())
@@ -407,8 +434,6 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		.visible(puddle_visible)
 		.zIndex(2);
 		puddleOverlay = map.addGroundOverlay(puddleOverlayOptions);
-		puddleOverlay.setVisible(puddle_visible);
-		puddle_visible = true;
 		
 		LatLng midfield = new LatLng((MainActivity.field.getFieldBounds().southwest.latitude + MainActivity.field.getFieldBounds().northeast.latitude)/2.0, (MainActivity.field.getFieldBounds().southwest.longitude + MainActivity.field.getFieldBounds().northeast.longitude)/2.0);
 		delineationMarkerOptions = new MarkerOptions()
@@ -418,12 +443,12 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		
 		delineating = true;
 		delineationPoint = field.getXYFromLatLng(delineationMarker.getPosition());
-		delineationPoint = new Point(302, 315);
-		Log.w("delinpoint", delineationPoint.toString());
+//		delineationPoint = new Point(302, 315);
+//		Log.w("delinpoint", delineationPoint.toString());
 		selectedPitIndex = watershedDataset.pits.getIndexOf(watershedDataset.pits.pitIdMatrix[delineationPoint.y][delineationPoint.x]);
 		showResultsFragment();
-		new DelineateWatershedTask(delineationPoint).execute();
 		delineation_visible = true;
+		new DelineateWatershedTask(delineationPoint).execute();
 		delineating = false;
 //		Debug.stopMethodTracing();
 	}
@@ -469,6 +494,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 
 		@Override
 		protected void onProgressUpdate(Object... values) {
+			MainActivity.wsdProgressBar.setProgress((Integer) values[0]);
 		}
 
 		protected void onPostExecute(WatershedDataset result) {
@@ -477,7 +503,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		}
 
 		@Override
-		public void watershedDatasetOnProgress(int progress, String status, Bitmap bitmap) {
+		public void simulationOnProgress(int progress, String status) {
 			Object[] array = new Object[3];
 			array[0] = progress;
 			array[1] = status;
@@ -485,7 +511,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 		}
 
 		@Override
-		public void watershedDatasetDone() {
+		public void simulationDone() {
 		}
 	}
 
@@ -705,12 +731,10 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 			bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
 			field.setBitmap(bitmap);
 			//remove old map overlay and create new one
-//			GroundOverlay ppo = Field.prevoverlay;
 			field.createOverlay();
 			if (dem_visible) {
 				demOverlay.setTransparency(demAlpha);
 			}
-//			ppo.remove();
 			currentlyDrawing = false;
 		}
 	}
@@ -792,6 +816,7 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 					showResultsFragment();
 				}
 				delineationMarkerOptions.position(delineationMarker.getPosition())
+//				.title(Integer.toString(watershedDataset.pits.pitIdMatrix[delineationPoint.y][delineationPoint.x]));
 				.title(delineationPoint.toString());
 				new DelineateWatershedTask(delineationPoint).execute();			
 			}
@@ -804,5 +829,4 @@ public class MainActivity extends FragmentActivity implements OnMapClickListener
 	@Override
 	public void onMarkerDragStart(Marker marker) {		
 	}
-
 }

@@ -151,7 +151,7 @@ public class ElevationRaster {
 		return lowerLeft;
 	}
 
-	public void setLowerLeft(LatLng lowerLeft) {
+	public void setSouthWest(LatLng lowerLeft) {
 		this.lowerLeft = lowerLeft;
 	}
 
@@ -159,7 +159,7 @@ public class ElevationRaster {
 		return upperRight;
 	}
 
-	public void setUpperRight(LatLng upperRight) {
+	public void setNorthEast(LatLng upperRight) {
 		this.upperRight = upperRight;
 	}
 

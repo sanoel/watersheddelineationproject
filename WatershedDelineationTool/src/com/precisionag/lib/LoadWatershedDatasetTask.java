@@ -55,7 +55,7 @@ public class LoadWatershedDatasetTask extends AsyncTask <String, Object, Watersh
 //		.transparency(MainActivity.catchmentsAlpha));
 	}
 
-	public void watershedDatasetOnProgress(int progress, String status, Bitmap bitmap) {
+	public void simulationOnProgress(int progress, String status) {
 		//android.os.Debug.waitForDebugger();
 		Object[] array = new Object[2];
 		array[0] = progress;
@@ -63,7 +63,7 @@ public class LoadWatershedDatasetTask extends AsyncTask <String, Object, Watersh
 		publishProgress(array);
 	}
 
-	public void watershedDatasetDone() {
+	public void simulationDone() {
 
 	}
 	

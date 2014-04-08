@@ -99,7 +99,7 @@ public class ProgressFragment extends Fragment{
 		}
 
 		@Override
-		public void watershedDatasetOnProgress(int progress, String status, Bitmap bitmap) {
+		public void simulationOnProgress(int progress, String status) {
 			String[] array = new String[2];
 			array[0] = Integer.toString(progress);
 			array[1] = status;
@@ -107,7 +107,7 @@ public class ProgressFragment extends Fragment{
 		}
 
 		@Override
-		public void watershedDatasetDone() {
+		public void simulationDone() {
 		}
 
 	}
