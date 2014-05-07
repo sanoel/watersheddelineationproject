@@ -39,6 +39,7 @@ import com.openatk.openatklib.atkmap.models.ATKPoint;
 import com.openatk.openatklib.atkmap.models.ATKPolyline;
 import com.openatk.openatklib.atkmap.views.ATKPointView;
 import com.openatk.openatklib.atkmap.views.ATKPolylineView;
+import com.waterapps.waterplane.PolygonOptions;
 
 import org.waterapps.lib.*;
 
@@ -659,12 +660,11 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 						demBounds = new LatLngBounds(dem.getSw(), dem.getNe());
 					}
 					dems.add(dem);
-//					demOutlines.add(map.addPolyline(new ATKPolyline().add(new LatLng(dem.getSw_lat(), dem.getSw_long()))
-//							.add(new LatLng(dem.getSw_lat(), dem.getNe_long()))
-//							.add(new LatLng(dem.getNe_lat(), dem.getNe_long()))
-//							.add(new LatLng(dem.getNe_lat(), dem.getSw_long()))
-//							.add(new LatLng(dem.getSw_lat(), dem.getSw_long()))
-//							.color(Color.RED)));
+					demOutlines.add(map.addPolygon(new PolygonOptions()
+                            .add(dem.getSw())
+                            .add(dem.getNe())
+                            .strokeColor(Color.RED)
+                            .fillColor(Color.argb(64, 255, 0, 0))));
 					demBounds = demBounds.including(dem.getSw());
 					demBounds = demBounds.including(dem.getNe());
 				}
