@@ -19,14 +19,12 @@ import android.widget.TextView;
 public class ProgressFragment extends Fragment{
 	private ProgressBar progressBar;
 	private TextView loadMessage;
-	private TextView progressMessage;
 	private TextView previewMessage;
     private WatershedDataset watershedDataset;
 	ProgressFragmentListener pflistener;
 	
 	public interface ProgressFragmentListener {
 		public WatershedDataset ProgressFragmentGetData();
-//		public void ProgressFragmentOnProgress();
 		public void ProgressFragmentDone(WatershedDataset watershedDataset);
 		//put functions in here to save any changes to the results views 
 	}
@@ -62,7 +60,7 @@ public class ProgressFragment extends Fragment{
 		loadMessage = (TextView) view.findViewById(R.id.load_message);
 		loadMessage.setText("Loading...");
 		progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
-		ImageView catchmentsImage = (ImageView) view.findViewById(R.id.catchments_example_image);
+		view.findViewById(R.id.catchments_example_image);
 		previewMessage = (TextView) view.findViewById(R.id.preview_message);
 		previewMessage.setText("Here's what's coming...");
 		return view;

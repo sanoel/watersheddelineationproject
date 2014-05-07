@@ -6,13 +6,10 @@
     tools:context=".MainActivity" >
 
     <fragment
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:map="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/map"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="5"
-        class="com.google.android.gms.maps.SupportMapFragment"/>
+	        android:id="@+id/map"
+	        android:name="com.openatk.openatklib.atkmap.ATKSupportMapFragment"
+	        android:layout_width="match_parent"
+	        android:layout_height="match_parent" />
 
     <Button
         android:id="@+id/button_simulate"

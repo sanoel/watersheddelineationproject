@@ -2,21 +2,16 @@ package org.waterapps.watershed;
 
 import org.waterapps.watershed.R;
 import android.app.Activity;
-import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.tiffdecoder.TiffDecoder;
-
 public class ResultsPanelFragment extends Fragment{
 	private TextView area;
 	private TextView depressionStorage;
-//    private WatershedDataset watershedDataset;
 	ResultsPanelFragmentListener listener;
 	int CLICKED_CATCHMENT= 0;
 	int CLICKED_WATERSHED = 1;
@@ -42,12 +37,12 @@ public class ResultsPanelFragment extends Fragment{
 	public void updateResults(int clickType) {
 //		watershedDataset = listener.ResultsPanelFragmentGetData();
 		if (clickType == CLICKED_CATCHMENT) {
-			area.setText("Area: " + String.format("%.3f", MainActivity.watershedDataset.pits.pitDataList.get(MainActivity.selectedPitIndex).allPointsList.size()*0.000247105*TiffDecoder.nativeTiffGetScaleX()*TiffDecoder.nativeTiffGetScaleY())+ " acres");
-			depressionStorage.setText("Retention Volume: " + String.format("%.3f", MainActivity.watershedDataset.pits.pitDataList.get(MainActivity.selectedPitIndex).retentionVolume*0.000810713194) + " acre-feet");
+			area.setText("Area: " + String.format("%.3f", WatershedDataset.pits.pitDataList.get(MainActivity.selectedPitIndex).area*0.000247105*MainActivity.watershedDataset.cellSize*MainActivity.watershedDataset.cellSize)+ " acres");
+//			area.setText("Area: " + String.format("%.3f", MainActivity.watershedDataset.pits.pitDataList.get(MainActivity.selectedPitIndex).allPointsList.size()*0.000247105*TiffDecoder.nativeTiffGetScaleX()*TiffDecoder.nativeTiffGetScaleY())+ " acres");
+			depressionStorage.setText("Retention Volume: " + String.format("%.3f", WatershedDataset.pits.pitDataList.get(MainActivity.selectedPitIndex).retentionVolume*0.000810713194) + " acre-feet");
 		} else if (clickType == CLICKED_WATERSHED) {
-			area.setText("Area: " + String.format("%.3f", MainActivity.watershedDataset.delineatedArea*0.000247105*TiffDecoder.nativeTiffGetScaleX()*TiffDecoder.nativeTiffGetScaleY())+ " acres");
-			depressionStorage.setText("Retention Volume: " + String.format("%.3f", MainActivity.watershedDataset.pits.pitDataList.get(MainActivity.selectedPitIndex).retentionVolume*0.000810713194) + " acre-feet");
-//			depressionStorage.setText("Retention Volume: " + String.format("%.3f", MainActivity.watershedDataset.delineatedStorageVolume * 0.000810713194) + " acre-feet");
+			area.setText("Area: " + String.format("%.3f", WatershedDataset.delineatedArea*0.000247105*MainActivity.watershedDataset.cellSize*MainActivity.watershedDataset.cellSize)+ " acres");
+			depressionStorage.setText("Retention Volume: " + String.format("%.3f", WatershedDataset.pits.pitDataList.get(MainActivity.selectedPitIndex).retentionVolume*0.000810713194) + " acre-feet");
 		}
 	}
 	
@@ -55,7 +50,6 @@ public class ResultsPanelFragment extends Fragment{
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.results_fragment, container, false);
 		area = (TextView) view.findViewById(R.id.area);
-//		averageSlope = (TextView) view.findViewById(R.id.average_slope);
 		depressionStorage = (TextView) view.findViewById(R.id.depression_storage);
 		return view;
 	}
