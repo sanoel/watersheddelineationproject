@@ -4,7 +4,6 @@ package org.waterapps.lib;
  * Created by Steve on 7/21/13.
  */
 
-import java.net.URI;
 
 /**
  * An interface to read DEM data from files

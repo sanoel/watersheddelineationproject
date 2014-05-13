@@ -1,43 +1,37 @@
 package org.waterapps.lib;
 
+import java.io.File;
 import java.net.URI;
 
 import org.waterapps.watershed.MainActivity;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.AsyncTask;
+import android.util.Log;
 
 /**
  * Makes ReadDemData interface into an AsyncTask to run off of UI thread
  */
 public class ReadDemDataTask extends AsyncTask<URI, Integer, DemData> {
     Context context;
-    DemData data;
+    DemData demData;
     ProgressDialog dialog;
-    String filename;
-
-    /**
-     * Default constructor
-     * @param con
-     * @param raster
-     */
-    public ReadDemDataTask(Context con, DemData raster) {
-        context = con;
-        data = raster;
-        filename = "the default elevation file";
-    }
+    String filePath;
 
     /**
      * Constructor which includes filename to display in progress bar
-     * @param con
-     * @param raster
-     * @param filename
+     * @param demData 
+     * @param context
+     * @param filePath
      */
-    public ReadDemDataTask(Context con, DemData raster, String filename) {
-        context = con;
-        data = raster;
-        this.filename = filename;
+    public ReadDemDataTask(DemData demData, Context context, String filePath) {
+        this.demData = demData;
+        this.context = context;
+        this.filePath = filePath;
     }
 
     /**
@@ -47,7 +41,7 @@ public class ReadDemDataTask extends AsyncTask<URI, Integer, DemData> {
     protected void onPreExecute() {
         dialog = new ProgressDialog(context);
         dialog.setMax(100);
-        dialog.setMessage("Loading elevations into map from " + filename);
+        dialog.setMessage("Loading elevations into map from " + filePath.split("/")[filePath.split("/").length-1]);
         dialog.show();
     }
 
@@ -58,15 +52,11 @@ public class ReadDemDataTask extends AsyncTask<URI, Integer, DemData> {
      */
     protected DemData doInBackground(URI... params) {
         publishProgress(0);
-
-        ReadDemData readObject = null;
-
-        //select proper reader for filetype
-        //only geotiff supported for now
-        if (filename.contains(".tif")) readObject = new ReadGeoTiff();
-        data = readObject.readFromFile(filename); //params[0]);
+        //TODO This reader handles only geotiff files (.tif) at the moment.  We could probably handle others.
+        GdalUtils.readDemData(demData, filePath);
+        
         publishProgress(100);
-        return data;
+        return demData;
     }
 
     protected void onProgressUpdate(Integer... progress) {
@@ -75,11 +65,14 @@ public class ReadDemDataTask extends AsyncTask<URI, Integer, DemData> {
 
     /**
      * Once the file read is complete, pass data to handler in MainActivity
-     * @param rasters
+     * @param demData
      */
-    protected void onPostExecute(DemData rasters) {
+    protected void onPostExecute(DemData demData) {
+		demData.getDemFile().getOutlinePolygon().setStrokeColor(Color.BLACK);
+		demData.getDemFile().getOutlinePolygon().setFillColor(Color.TRANSPARENT);
+		demData.getDemFile().getTapPoint().hide();
         dialog.dismiss();
-        MainActivity.onFileRead(rasters);
+        DemLoadUtils.onFileRead(demData);
     }
 
 }

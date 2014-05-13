@@ -90,8 +90,6 @@ public class WatershedDataset {
 			}
 		}
 		
-		listener.simulationOnProgress(status, "Removing NoDATA values from the DEM");
-		removeDemNoData();
 		listener.simulationOnProgress(status, "Discovering Flow Routes");
 		// Compute Flow Direction
 		int pitCellCount = computeFlowDirection();		
@@ -122,50 +120,6 @@ public class WatershedDataset {
 		}
 	}
 
-	private float[][] removeDemNoData() {
-		float distance;
-		float weight;
-		float[][] newDEM = dem;
-		boolean noDataCellsRemaining = true;
-		while (noDataCellsRemaining == true) {
-			noDataCellsRemaining = false;
-			for (int r = 0; r < this.dem.length; r++) {
-				for (int c = 0; c < this.dem[0].length; c++) { 
-					if (dem[r][c] == noDataVal) {
-						float weightsum = 0;
-						float weightedvalsum = 0;
-						for (int x = -2; x < 3; x++) {
-							for (int y = -2; y < 3; y++) {
-								//skip the current cell
-								if (x == 0 && y == 0) {
-									continue;
-								}
-								//verify that the cell is in the DEM range
-								if (r+y >= this.dem.length || r+y < 0 || c+x >= this.dem[0].length || c+x < 0) {
-									continue;
-								}
-								//verify that the neighbor cell is not NoDATA, as this will break the IDW computation
-								if (dem[r+y][c+x] != noDataVal) {
-									distance = (float) Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)); 
-									weight = 1 / distance;
-									weightsum += weight;
-									weightedvalsum += dem[r+y][c+x] * weight;
-									newDEM[r][c] = weightedvalsum/weightsum;
-
-								}
-							}
-						}
-						if (newDEM[r][c] == noDataVal) {
-							noDataCellsRemaining = true;
-						}
-					}
-				}
-				status = (int) (10 * (((r*this.dem[0].length))/((float)this.dem.length*this.dem[0].length)));
-			}
-		}
-		status = 10;
-		return newDEM;
-	}
 
 	public int computeFlowDirection() {
 		int pitCellCount = 0;

@@ -1,48 +1,128 @@
 package org.waterapps.lib;
 
+import java.io.File;
 import java.net.URI;
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.waterapps.watershed.MainActivity;
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.net.Uri;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.openatk.openatklib.atkmap.ATKMap;
+import com.openatk.openatklib.atkmap.models.ATKPoint;
+import com.openatk.openatklib.atkmap.models.ATKPolygon;
+import com.openatk.openatklib.atkmap.views.ATKPointView;
+import com.openatk.openatklib.atkmap.views.ATKPolygonView;
 
 public class DemFile {
-    int id;
-    LatLng sw;
-    LatLng ne;
-//    float sw_lat;
-//    float sw_long;
-//    float ne_lat;
-//    float ne_long;
-    String filename;
-    String timestamp;
-    URI fileUri;
+    private int id;
+    private LatLngBounds bounds;
+    private String filePath;
+    private String timestamp;
+    private URI fileUri;
+    private ATKPolygonView outlinePolygon;
+    private ATKPointView tapPoint;
 
+    public DemFile(int id, File file, LatLngBounds bounds, ATKMap map) {
+    	DateFormat df = DateFormat.getDateInstance();
+        this.fileUri = URI.create(Uri.fromFile(file).toString());
+        this.id = id;
+        this.bounds = bounds;
+        this.filePath = file.getPath();
+        this.timestamp = df.format(file.lastModified());
+        
+        // Draw the boundary on the map
+		List<LatLng> list = new ArrayList<LatLng>();
+		list.add(bounds.northeast);
+        list.add(bounds.southwest);
+        ATKPolygon poly = new ATKPolygon(this.getFilePath(), list);
+        poly.viewOptions.setFillColor(Color.argb(64, 255, 0, 0));
+        poly.viewOptions.setStrokeColor(Color.RED);
+        setOutlinePolygon(map.addPolygon(poly));
+        
+        //Add the tappable marker to the map
+        ATKPoint point = new ATKPoint(this.filePath, new GeoRectangle(this.getBounds()).center());
+        setTapPoint(map.addPoint(point));
+        tapPoint.setIcon(textToBitmap("Tap here to load"));
+    }
+
+    public DemFile(File file, LatLngBounds bounds, ATKMap map) {
+    	DateFormat df = DateFormat.getDateInstance();
+        this.fileUri = URI.create(Uri.fromFile(file).toString());
+        this.bounds = bounds;
+        this.filePath = file.getPath();
+        this.timestamp = df.format(file.lastModified());
+        
+        // Draw the boundary on the map
+		List<LatLng> list = new ArrayList<LatLng>();
+		list.add(bounds.northeast);
+		list.add(new LatLng(bounds.southwest.latitude, bounds.northeast.longitude));
+        list.add(bounds.southwest);
+        list.add(new LatLng(bounds.northeast.latitude, bounds.southwest.longitude));
+        ATKPolygon poly = new ATKPolygon(this.getFilePath(), list);
+        poly.viewOptions.setFillColor(Color.argb(64, 255, 0, 0));
+        poly.viewOptions.setStrokeColor(Color.RED);
+        setOutlinePolygon(map.addPolygon(poly));
+        
+        //Add the tappable marker to the map
+        ATKPoint point = new ATKPoint(this.filePath, new GeoRectangle(this.getBounds()).center());
+        setTapPoint(map.addPoint(point));
+        getTapPoint().setIcon(textToBitmap("Tap here to load"));
+    }
+
+    public DemFile() {
+
+    }
+    
+    public Bitmap textToBitmap(String text) {
+    	//getting context like this a good practice?
+//    	CustomMarker.setDensity(MainActivity.context.getResources().getDisplayMetrics().density);
+        float density = MainActivity.context.getResources().getDisplayMetrics().density;
+        
+        int width = dpToPx(density, 180);
+        int height = dpToPx(density, 20);
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawBitmap(bitmap, 0, 0, null);
+
+        TextPaint textPaint = new TextPaint();
+        textPaint.setAntiAlias(true);
+        textPaint.setTextSize(16.0f * density);
+        textPaint.setColor(Color.WHITE);
+        StaticLayout sl= new StaticLayout(text, textPaint, bitmap.getWidth()-8, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
+        canvas.translate((int)(3.0f * density), (int)(4.0f * density));
+        sl.draw(canvas);
+        return bitmap;
+    }
+    
+    static int dpToPx(float density, int dp) {
+        return (int) (dp * density + 0.5f);
+    }
+    
+    public void setPolygon(ATKPolygonView polygon) {
+    	if (this.getOutlinePolygon() != null) {
+    		this.getOutlinePolygon().remove();
+    	}
+    	this.setOutlinePolygon(polygon);
+    }
+    
     public URI getFileUri() {
         return fileUri;
     }
 
     public void setFileUri(URI fileUri) {
         this.fileUri = fileUri;
-    }
-
-    public DemFile(int id, LatLng sw, LatLng ne, String filename, String timestamp) {
-        this.id = id;
-        this.sw = sw;
-        this.ne = ne;
-        this.filename = filename;
-        this.timestamp = timestamp;
-    }
-
-    public DemFile(LatLng sw, LatLng ne, String filename, String timestamp, URI fileUri) {
-    	this.sw = sw;
-        this.ne = ne;
-        this.filename = filename;
-        this.timestamp = timestamp;
-        this.fileUri = fileUri;
-    }
-
-    public DemFile() {
-
     }
 
     public int getId() {
@@ -53,41 +133,12 @@ public class DemFile {
         this.id = id;
     }
 
-    public LatLng getNe() {
-        return ne;
-    }
-    
-    public LatLng getSw() {
-        return sw;
-    }
-    
-
-//    public void setNe_lat(float ne_lat) {
-//        this.ne_lat = ne_lat;
-//    }
-//
-//    public float getNe_long() {
-//        return ne_long;
-//    }
-//
-//    public void setNe_long(float ne_long) {
-//        this.ne_long = ne_long;
-//    }
-    
-    public void setNe(LatLng nE){ 
-    	this.ne = nE;
-    }
-    
-    public void setSw(LatLng sW){ 
-    	this.sw = sW;
-    }
-
-    public String getFilename() {
-        return filename;
+    public String getFilePath() {
+        return filePath;
     }
 
     public void setFilename(String filename) {
-        this.filename = filename;
+        this.filePath = filename;
     }
 
     public String getTimestamp() {
@@ -99,7 +150,27 @@ public class DemFile {
     }
 
     public LatLngBounds getBounds() {
-        return new LatLngBounds(sw, ne);
+        return bounds;
     }
+    
+    public void setBounds(LatLngBounds bounds) {
+        this.bounds = bounds;
+    }
+
+	public ATKPointView getTapPoint() {
+		return tapPoint;
+	}
+
+	public void setTapPoint(ATKPointView tapPoint) {
+		this.tapPoint = tapPoint;
+	}
+
+	public ATKPolygonView getOutlinePolygon() {
+		return outlinePolygon;
+	}
+
+	public void setOutlinePolygon(ATKPolygonView outlinePolygon) {
+		this.outlinePolygon = outlinePolygon;
+	}
 
 }

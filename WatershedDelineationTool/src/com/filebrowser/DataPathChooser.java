@@ -81,18 +81,10 @@ public class DataPathChooser extends ListActivity {
 			}
 			finish();
 		} else if (itemId == R.id.menuSelect) {
-			SharedPreferences prefs = PreferenceManager
-					.getDefaultSharedPreferences(getBaseContext());
-			SharedPreferences.Editor editor = prefs.edit();
-			editor.putString("dataPath", currentDirectory.getPath() + "/");
-			editor.putString("dem_dir", currentDirectory.getPath() + "/");
-			MainActivity.demDirectory = currentDirectory.getPath() + "/";
-			MainActivity.removeDemOutlines();
-			MainActivity.scanDEMs();
-			editor.commit();
 			SettingsActivity.updateDemFolder();
 			if(returnIntent.contentEquals("back") == false){
 				Intent i2 = new Intent(returnIntent);
+				i2.putExtra("directory", currentDirectory.getPath());
 				//startActivity(i2);
 			}
 			finish();

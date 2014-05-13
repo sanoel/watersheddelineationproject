@@ -1,17 +1,5 @@
 package org.waterapps.watershed;
 
-import static android.graphics.Color.HSVToColor;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import com.filebrowser.DataFileChooser;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -20,11 +8,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Polyline;
-
 import org.waterapps.lib.DemData;
-import org.waterapps.lib.ReadDemDataTask;
+import org.waterapps.lib.DemLoadUtils;
 import org.waterapps.watershed.HelpActivity;
 import org.waterapps.watershed.R;
 import org.waterapps.watershed.ProgressFragment.ProgressFragmentListener;
@@ -36,15 +21,11 @@ import com.openatk.openatklib.atkmap.listeners.ATKMapClickListener;
 import com.openatk.openatklib.atkmap.listeners.ATKPointClickListener;
 import com.openatk.openatklib.atkmap.listeners.ATKPointDragListener;
 import com.openatk.openatklib.atkmap.models.ATKPoint;
-import com.openatk.openatklib.atkmap.models.ATKPolyline;
 import com.openatk.openatklib.atkmap.views.ATKPointView;
-import com.openatk.openatklib.atkmap.views.ATKPolylineView;
-import com.waterapps.waterplane.PolygonOptions;
 
 import org.waterapps.lib.*;
 
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -53,15 +34,11 @@ import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -70,9 +47,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends FragmentActivity implements ATKMapClickListener, ProgressFragmentListener, ATKPointDragListener, ATKPointClickListener, ResultsPanelFragmentListener {
+public class MainActivity extends FragmentActivity implements ATKMapClickListener, ProgressFragmentListener, ATKPointDragListener, ATKPointClickListener, ResultsPanelFragmentListener, WmacDemLoadUtilsListener{
 	ProgressFragmentListener pflistener;
-	private Uri fileUri;
 	LocationManager locationManager;
 	private static Menu myMenu = null;
 	public static ATKMap map;
@@ -87,7 +63,6 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 	public static Context context;
 	
 	String wsdStatusMsg = "Reading DEM";
-	public static String demDirectory = "/dem";
 	public static float demAlpha;
 	public static float delineationAlpha;
 	public static float puddleAlpha;
@@ -96,15 +71,12 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 	public static int selectedPitIndex;
 	private static final int FIRST_START = 42;
 	private static final int INITIAL_LOAD = 6502;
-	public static int hsvColors[];
-	public static int hsvTransparentColors[];
+	private static final int FILE_PATH_CHOOSER = 6503;
 	
-	public static boolean coloring;
-	public static boolean currentlyDrawing;
-	public static boolean dem_visible;
-	public static boolean pits_visible;
-	public static boolean delineation_visible;
-	public static boolean puddle_visible;
+	public static boolean demVisible;
+	public static boolean pitsVisible;
+	public static boolean delineationVisible;
+	public static boolean puddleVisible;
 	public static boolean delineating = false;
 	private boolean firstStart;
 
@@ -115,30 +87,21 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 	public static GroundOverlay pitsOverlay;
 	public static GroundOverlay delineationOverlay;
 	public static GroundOverlay puddleOverlay;
-	public static GroundOverlay demOverlay;	
-	
+//	public static GroundOverlay demOverlay;
 	public static GroundOverlayOptions pitsOverlayOptions;
 	public static GroundOverlayOptions delineationOverlayOptions;
 	public static GroundOverlayOptions puddleOverlayOptions;
 	public static GroundOverlayOptions demOverlayOptions;
-	public static ATKPoint delineationMarkerOptions;
 	
 	public static ATKPointView delineationMarker;
-	static ArrayList<Polyline> demOutlines;
-
 	public static Point delineationPointRC;
 	public static Point clickedPoint;
-	public static LatLngBounds demBounds;
-	
 
-	static ArrayList<DemFile> dems;
 	public static WatershedDataset watershedDataset;
 	ProgressFragment progressFragment = null;
 	public static ResultsPanelFragment resultsFragment = null;
-	public static Field field;
-	DemData raster;
-	DemFile currentlyLoaded;
 	RainfallSimConfig delineation_settings;
+	DemLoadUtils demLoadUtils;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -156,48 +119,17 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 			map = atkmapFragment.getAtkMap();
 		}
 		setUpMapIfNeeded();
-		
-		context = this;
+		context = this;		
 		UiSettings uiSettings = map.getUiSettings();
 		uiSettings.setRotateGesturesEnabled(false);
 		uiSettings.setTiltGesturesEnabled(false);
 		uiSettings.setZoomControlsEnabled(false);
-		
-		// Create array of DEM outlines to be shown and clickable on the map
-		demOutlines = new ArrayList<Polyline>();
-		
-		// Create a new Field object and hand it a template bitmap to help initialize (this works better than creating one from scratch)
-		Field.setMapFragment(atkmapFragment);
-		Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.watershedelineation);
-		field = new Field(bitmap, new LatLng(0.0, 0.0), new LatLng(0.0, 0.0), 0.0, 0.0);
 
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		RainfallSimConfig.setDepth(Float.parseFloat(prefs.getString("pref_rainfall_amount", "1.0f")));
-		demDirectory = prefs.getString("dem_dir", Environment.getExternalStorageDirectory().toString() + "/dem");
-		scanDEMs();
-		coloring = true;
-		currentlyDrawing = false;
+		String demDirectory = prefs.getString("dem_dir", Environment.getExternalStorageDirectory().toString() + "/dem");
+		demLoadUtils = new DemLoadUtils(this, context, demDirectory, map, prefs);
 		
-		// Set inital transparency and visibility toggle setting
-		setDemAlpha(1 - (float) prefs.getInt("pref_key_dem_trans_level", 50) / 100.0f);
-		setDelineationAlpha(1 - (float) prefs.getInt("pref_key_delin_trans_level", 50) / 100.0f);
-		setPuddleAlpha(1 - (float) prefs.getInt("pref_key_puddle_trans_level", 50) / 100.0f);
-		setCatchmentsAlpha(1 - (float) prefs.getInt("pref_key_catchments_trans_level", 50) / 100.0f);
-		dem_visible = true;
-		pits_visible = false;
-		puddle_visible = false;
-		delineation_visible = false;
-		
-		// Get colors for DEM coloring (I think)
-		hsvColors = new int[256];
-		hsvTransparentColors = new int[256];
-		float hsvComponents[] = {1.0f, 0.75f, 0.75f};
-		for(int i = 0; i<255; i++) {
-			hsvComponents[0] = 360.0f*i/255.0f;
-			hsvColors[i] = HSVToColor(hsvComponents);
-			hsvTransparentColors[i] = HSVToColor(128, hsvComponents);
-		}
-
 		//show help on first app start
 		firstStart = prefs.getBoolean("first_start", true);
 		if (firstStart) {
@@ -214,7 +146,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 
 		//load initial DEM if help menu isn't being shown
 		if(!firstStart) {
-			loadInitialDEM();
+			demLoadUtils.loadInitialDem();
 		}
 		wsdProgressBar = (ProgressBar)findViewById(R.id.progress_bar);
 		wsdProgressBar.setVisibility(View.INVISIBLE);
@@ -241,9 +173,19 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 				//				showProgressFragment();
 			}
 		});
+		
+		// Set inital transparency and visibility toggle setting
+		setDemAlpha(1 - (float) prefs.getInt("pref_key_dem_trans_level", 50) / 100.0f);
+		setDelineationAlpha(1 - (float) prefs.getInt("pref_key_delin_trans_level", 50) / 100.0f);
+		setPuddleAlpha(1 - (float) prefs.getInt("pref_key_puddle_trans_level", 50) / 100.0f);
+		setCatchmentsAlpha(1 - (float) prefs.getInt("pref_key_catchments_trans_level", 50) / 100.0f);
+		demVisible = true;
+		pitsVisible = false;
+		puddleVisible = false;
+		delineationVisible = false;
 	}
 	
-	//Group: 
+	//Group: ATK
 	private void setUpMapIfNeeded() {
 		if (map == null) {
 			//Map is null try to find it
@@ -279,47 +221,6 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 		map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
 	}
 
-	public void onMapClick (LatLng point) {
-		if (pits_visible) {
-			clickedPoint = field.getXYFromLatLng(point);
-			if (clickedPoint != null) {
-//				if (delinBitmap.getPixel(numcols - 1 - clickedPoint.x, clickedPoint.y) == Color.RED) {
-//					resultsFragment.updateResults(1);
-//				} else {
-				selectedPitIndex = WatershedDataset.pits.getIndexOf(WatershedDataset.pits.pitIdMatrix[clickedPoint.y][clickedPoint.x]);
-				pitsOverlay.remove();
-				pitsOverlayOptions = new GroundOverlayOptions()
-				.image(BitmapDescriptorFactory.fromBitmap(WatershedDataset.pits.highlightSelectedPit(selectedPitIndex)))
-				.positionFromBounds(field.getFieldBounds())
-				.transparency(pitsAlpha)
-				.visible(pits_visible)
-				.zIndex(1);
-				pitsOverlay = map.addGroundOverlay(pitsOverlayOptions);
-				pits_visible = true;
-				resultsFragment.updateResults(0);
-			}
-		}
-
-		//load DEM if clicked on
-		DemFile dem;
-		if (currentlyLoaded.getBounds().contains(point)) {
-		} else {
-			for(int i = 0; i<dems.size(); i++) {
-				dem = dems.get(i);
-				if ( (currentlyLoaded == null) || !dem.getFilename().equals(currentlyLoaded.getFilename())) {
-					if(dem.getBounds().contains(point)) {
-						currentlyLoaded = dem;
-						raster = new DemData();
-						new ReadDemDataTask(this, raster, dem.getFilename()).execute(dem.getFileUri());
-						SharedPreferences.Editor editor = prefs.edit();
-						editor.putString("last_dem", dem.getFileUri().getPath());
-						editor.commit();
-					}
-				}
-			}
-		}
-	}
-
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
@@ -331,6 +232,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 		return true;
 	}
 
+	// Action Bar and Overflow Menu
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Choose DEM Menu Item
@@ -341,7 +243,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 		}
 		else if (item.getItemId() == R.id.menu_choose_dem) {
 			Intent i = new Intent(this, DataFileChooser.class);
-			i.putExtra("path", demDirectory);
+			i.putExtra("path", demLoadUtils.getDemDirectory());
 			startActivityForResult(i, 1);
 			return true;
 		}  else if (item.getItemId() == R.id.menu_settings) {
@@ -373,69 +275,69 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 				puddleOverlay.remove();
 				puddleOverlay = null;
 			}
-			if (demOverlay != null) {
-				demOverlay.remove();
+			if (demLoadUtils.getLoadedDemData().getGroundOverlay() != null) {
+				demLoadUtils.getLoadedDemData().getGroundOverlay().remove();
 			}
 			finish();
 			startActivity(getIntent());
 			return true;
 		}else if (item.getItemId() == R.id.menu_center) {
-			map.animateCamera(CameraUpdateFactory.newLatLngBounds(field.getFieldBounds(), 50));
+			map.animateCamera(CameraUpdateFactory.newLatLngBounds(demLoadUtils.getLoadedDemData().getDemFile().getBounds(), 50));
 			return true;
 		} else if(item.getItemId() == R.id.menu_dem) {
 			SharedPreferences.Editor edit = prefs.edit();
-			if (dem_visible) {
-				dem_visible = false;
+			if (demVisible) {
+				demVisible = false;
 			} else {
-				dem_visible = true;
+				demVisible = true;
 			}
-			demOverlay.setVisible(dem_visible);
-			demOverlayOptions.visible(dem_visible);
-			edit.putBoolean("pref_key_dem_vis", dem_visible);
+			demLoadUtils.getLoadedDemData().getGroundOverlay().setVisible(demVisible);
+			demOverlayOptions.visible(demVisible);
+			edit.putBoolean("pref_key_dem_vis", demVisible);
 			edit.commit();
-			item.setChecked(dem_visible);
+			item.setChecked(demVisible);
 			return true;
 		} else if(item.getItemId() == R.id.menu_catchments) {
 			SharedPreferences.Editor edit = prefs.edit();
-			if (pits_visible) {
-				pits_visible = false;
+			if (pitsVisible) {
+				pitsVisible = false;
 			} else {
-				pits_visible = true;
+				pitsVisible = true;
 			}
-			pitsOverlay.setVisible(pits_visible);
-			pitsOverlayOptions.visible(pits_visible);
+			pitsOverlay.setVisible(pitsVisible);
+			pitsOverlayOptions.visible(pitsVisible);
 
-			edit.putBoolean("pref_key_pits_vis", pits_visible);
+			edit.putBoolean("pref_key_pits_vis", pitsVisible);
 			edit.commit();
-			item.setChecked(pits_visible);
+			item.setChecked(pitsVisible);
 			return true;
 		} else if(item.getItemId() == R.id.menu_delineation) {
 			SharedPreferences.Editor edit = prefs.edit();
-			if (delineation_visible) {
-				delineation_visible = false;
+			if (delineationVisible) {
+				delineationVisible = false;
 			} else {
-				delineation_visible = true;
+				delineationVisible = true;
 				showResultsFragment();
 			}
-			delineationOverlay.setVisible(delineation_visible);
-			delineationOverlayOptions.visible(delineation_visible);
-			edit.putBoolean("pref_key_delin_vis", delineation_visible);
+			delineationOverlay.setVisible(delineationVisible);
+			delineationOverlayOptions.visible(delineationVisible);
+			edit.putBoolean("pref_key_delin_vis", delineationVisible);
 			edit.commit();
-			item.setChecked(delineation_visible);
+			item.setChecked(delineationVisible);
 			return true;
 		} else if(item.getItemId() == R.id.menu_puddles) {
 			SharedPreferences.Editor edit = prefs.edit();
-			if (puddle_visible) {
-				puddle_visible = false;
+			if (puddleVisible) {
+				puddleVisible = false;
 			} else {
-				puddle_visible = true;
+				puddleVisible = true;
 			}
-			puddleOverlay.setVisible(puddle_visible);
-			puddleOverlayOptions.visible(puddle_visible);
+			puddleOverlay.setVisible(puddleVisible);
+			puddleOverlayOptions.visible(puddleVisible);
 
-			edit.putBoolean("pref_key_puddle_vis", puddle_visible);
+			edit.putBoolean("pref_key_puddle_vis", puddleVisible);
 			edit.commit();
-			item.setChecked(puddle_visible);
+			item.setChecked(puddleVisible);
 			return true;
 		} else if (item.getItemId() == R.id.menu_help) {
 			Intent intent = new Intent(this, HelpActivity.class);
@@ -446,6 +348,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 		}
 	}
 
+	// Finished loading the DEM
 	@Override
 	public void ProgressFragmentDone(WatershedDataset watershedDataset) {
 		MainActivity.watershedDataset = watershedDataset;
@@ -461,47 +364,42 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 			mi.setEnabled(true);
 		}
 		
-		//Show the pits on the field
-		pits_visible = true;
+		//Show the catchment/pit map
+		pitsVisible = true;
 		pitsOverlayOptions = new GroundOverlayOptions()
 		.image(BitmapDescriptorFactory.fromBitmap(watershedDataset.altDrawPits()))
-		.positionFromBounds(field.getFieldBounds())
+		.positionFromBounds(demLoadUtils.getLoadedDemData().getBounds())
 		.transparency(pitsAlpha)
-		.visible(pits_visible)
+		.visible(pitsVisible)
 		.zIndex(1);
 		pitsOverlay = map.addGroundOverlay(pitsOverlayOptions);
 
-		puddle_visible = true;
+		// Show the filled areas
+		puddleVisible = true;
 		puddleOverlayOptions = new GroundOverlayOptions()
 		.image(BitmapDescriptorFactory.fromBitmap(watershedDataset.drawPuddles()))
-		.positionFromBounds(field.getFieldBounds())
+		.positionFromBounds(demLoadUtils.getLoadedDemData().getBounds())
 		.transparency(puddleAlpha)
-		.visible(puddle_visible)
+		.visible(puddleVisible)
 		.zIndex(2);
 		puddleOverlay = map.addGroundOverlay(puddleOverlayOptions);
 		
-		//Add Delineator Point to the map
+		//Add Delineation Point to the center of the DEM and delineate this watershed to begin with
 		LatLng where = map.getCameraPosition().target;
 		ATKPoint newPoint = new ATKPoint("Delineator", where);
 		delineationMarker = map.addPoint(newPoint);
 		delineationMarker.setSuperDraggable(true);
 		delineationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(), 100, 200);
-
-//		ATKPoint midfield = new LatLng((MainActivity.field.getFieldBounds().southwest.latitude + MainActivity.field.getFieldBounds().northeast.latitude)/2.0, (MainActivity.field.getFieldBounds().southwest.longitude + MainActivity.field.getFieldBounds().northeast.longitude)/2.0);
-//		delineationMarkerOptions = new MarkerOptions()
-//		.position(midfield);
-//		delineationMarker = MainActivity.map.addPoint(midfield);
-//		delineationMarker.setDraggable(true);
-		
 		delineating = true;
-		delineationPointRC = field.getXYFromLatLng(delineationMarker.getAtkPoint().position);
+		delineationPointRC = demLoadUtils.getLoadedDemData().getXYFromLatLng(delineationMarker.getAtkPoint().position);
 //		delineationPoint = new Point(302, 315);
 //		Log.w("delinpoint", delineationPoint.toString());
+		
+		// Display results corresponding to selected DEM or delineated watershed area
 		selectedPitIndex = WatershedDataset.pits.getIndexOf(WatershedDataset.pits.pitIdMatrix[delineationPointRC.y][delineationPointRC.x]);
 		showResultsFragment();
-		delineation_visible = true;
-		new DelineateWatershedTask(delineationPointRC).execute();
-		delineating = false;
+		delineationVisible = true;
+		new DelineateWatershedTask(delineationPointRC, demLoadUtils).execute();
 	}
 
 	//Group: watershedUI
@@ -599,18 +497,23 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 	}
 
 	//Group: watershedUI
-	public static float getAlpha() {
+	public float getAlpha() {
 		return demAlpha;
 	}
 
 	//Group: watershedUI
-	public static void setDemAlpha(float a) {
+	public void setDemAlpha(float a) {
 		demAlpha = a;
-		demOverlay.setTransparency(demAlpha);
+		if (demLoadUtils.getLoadedDemData() != null) {
+			if (demLoadUtils.getLoadedDemData().getGroundOverlay() != null) {
+				demLoadUtils.getLoadedDemData().getGroundOverlay().setTransparency(demAlpha);
+			}
+		}
+		
 	}
 
 	//Group: watershedUI
-	public static void setCatchmentsAlpha(float a) {
+	public void setCatchmentsAlpha(float a) {
 		pitsAlpha = a;
 		if (pitsOverlay != null) {
 			pitsOverlay.setTransparency(pitsAlpha);
@@ -618,7 +521,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 	}
 
 	//Group: watershedUI
-	public static void setPuddleAlpha(float a) {
+	public void setPuddleAlpha(float a) {
 		puddleAlpha = a;
 		if (puddleOverlay != null) {
 			puddleOverlay.setTransparency(puddleAlpha);
@@ -626,267 +529,59 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 	}
 	
 	//Group: watershedUI
-	public static void setDelineationAlpha(float a) {
+	public void setDelineationAlpha(float a) {
 		delineationAlpha = a;
 		if (delineationOverlay != null) {
 			delineationOverlay.setTransparency(delineationAlpha);
 		}
 	}
 
-	//looks through contents of DEM directory and displays outlines of all DEMs there
-	//Rename loadDemOutlines
-	public static void scanDEMs() {
-		//scan DEM directory
-		DemFile dem;
-		dems = new ArrayList<DemFile>();
-		Log.w("demdirect", demDirectory);
-
-		File f = new File(demDirectory);
-		Polyline outline;
-		demOutlines = new ArrayList<Polyline>();
-
-		if (f.isDirectory()) {
-			File file[] = f.listFiles();
-
-			Log.w("filelist", file[0].toString());
-			for (int i=0; i < file.length; i++)
-			{
-				if (file[i].isFile()) {
-					Log.w("files", file[i].toString());
-					dem = ReadGeoTiffMetadata.readMetadata(file[i]);
-					if(i==0) {
-						Log.w("sw", dem.getSw().toString());
-						Log.w("ne", dem.getNe().toString());
-						demBounds = new LatLngBounds(dem.getSw(), dem.getNe());
-					}
-					dems.add(dem);
-					demOutlines.add(map.addPolygon(new PolygonOptions()
-                            .add(dem.getSw())
-                            .add(dem.getNe())
-                            .strokeColor(Color.RED)
-                            .fillColor(Color.argb(64, 255, 0, 0))));
-					demBounds = demBounds.including(dem.getSw());
-					demBounds = demBounds.including(dem.getNe());
-				}
-			}
+	protected void onActivityResult (int requestCode, int resultCode, Intent data) {
+		// Handle data from file manager
+		if (requestCode == FIRST_START) {
+			demLoadUtils.loadInitialDem();
+			return;
+		}
+		// Handle return from the file chooser
+		if (requestCode == INITIAL_LOAD) {
+			demLoadUtils.loadFileChooserData(data);
+			return;
+		}
+		
+		if (requestCode == FILE_PATH_CHOOSER) {
+			demLoadUtils.setNewDemDirectory(data.getStringExtra("directory"));
 		}
 	}
 
-	//picks which DEM to load upon app start
-	//Group: DemLoader
-	public void loadInitialDEM() {
-		//attempt to load last used DEM, if it still exists
-		File demFile = new File(prefs.getString("last_dem", "foo"));
-		if(demFile.isFile()) {
-			raster = new DemData();
-			String filename = demFile.getName();
-			new ReadDemDataTask(this, raster, filename).execute(UritoURI(Uri.fromFile(demFile)));
-			setCurrentlyLoaded(prefs.getString("last_dem", "foo"));
-			return;
-		}
-		String path = demDirectory;
-		File f = new File(path);
-
-		//if DEM dir doesn't exist, create it and copy sample TIFF in, then open it
-		if (!f.isDirectory()) {
-			f.mkdir();
-			copyAssets();
-			raster = new DemData();
-			new ReadDemDataTask(this, raster).execute(UritoURI(Uri.fromFile(new File(demDirectory+"Feldun.tif"))));
-			setCurrentlyLoaded(demDirectory+"Feldun.tif");
-			return;
-		}
-		//selected directory exists
-		else {
-			//list files in DEM dir
-			File file[] = f.listFiles();
-			ArrayList<File> tiffs = new ArrayList<File>();
-
-			//count number of TIFFs in dir
-			int count = 0;
-			for(int i = 0; i<file.length; i++) {
-				if(file[i].getName().contains(".tif")) {
-					count++;
-					tiffs.add(file[i]);
-				}
-			}
-
-			//if no TIFFs, copy sample into dir and open
-			if (count == 0) {
-				copyAssets();
-				raster = new DemData();
-				new ReadDemDataTask(this, raster).execute(UritoURI(Uri.fromFile(new File(demDirectory+"Feldun.tif"))));
-				setCurrentlyLoaded(demDirectory+"Feldun.tif");
-			}
-			//if one TIFF, open it
-			else if(count == 1) {
-				raster = new DemData();
-				new ReadDemDataTask(this, raster, tiffs.get(0).getName()).execute(UritoURI(Uri.fromFile(tiffs.get(0))));
-				setCurrentlyLoaded(tiffs.get(0).getPath());
-			}
-			//if multiple TIFFs, let user choose
-			else {
-				Intent intent = new Intent(context, DataFileChooser.class);
-				intent.putExtra("path", demDirectory);
-				startActivityForResult(intent, INITIAL_LOAD);
-			}
-		}
+	@Override
+	public void onFileRead(DemData demData) {
+		new LoadWatershedDatasetTask(demData).execute();
 	}
 	
-	protected void onActivityResult (int requestCode, int resultCode, Intent data) {
-		//handle data from file manager
-		if (requestCode == FIRST_START) {
-			loadInitialDEM();
-			return;
-		}
-		System.out.print("Intent Handler");
-		System.out.print(data);
-
-		if (data != null) {
-			if (data.getData().toString().contains(".tif")) {
-				fileUri = data.getData();
-				java.net.URI juri = null;
-				try {
-					juri = new java.net.URI(fileUri.getScheme(),
-							fileUri.getSchemeSpecificPart(),
-							fileUri.getFragment());
-				} catch (URISyntaxException e) {
-					e.printStackTrace();
-				}
-				DemData raster = new DemData();
-				String filename = fileUri.getPath().split("/")[fileUri.getPath().split("/").length-1];
-				new ReadDemDataTask(this, raster, filename).execute(juri);
-				SharedPreferences.Editor editor = prefs.edit();
-				editor.putString("last_dem", fileUri.getPath());
-				editor.commit();
-
-				setCurrentlyLoaded(prefs.getString("last_dem", "foo"));
-				return;
+	public void onMapClick (LatLng latLng) {
+		if (pitsVisible) {
+			clickedPoint = demLoadUtils.getLoadedDemData().getXYFromLatLng(latLng);
+			if (clickedPoint != null) {
+//				if (delinBitmap.getPixel(numcols - 1 - clickedPoint.x, clickedPoint.y) == Color.RED) {
+//					resultsFragment.updateResults(1);
+//				} else {
+				selectedPitIndex = WatershedDataset.pits.getIndexOf(WatershedDataset.pits.pitIdMatrix[clickedPoint.y][clickedPoint.x]);
+				pitsOverlay.remove();
+				pitsOverlayOptions = new GroundOverlayOptions()
+				.image(BitmapDescriptorFactory.fromBitmap(WatershedDataset.pits.highlightSelectedPit(selectedPitIndex)))
+				.positionFromBounds(demLoadUtils.getLoadedDemData().getBounds())
+				.transparency(pitsAlpha)
+				.visible(pitsVisible)
+				.zIndex(1);
+				pitsOverlay = map.addGroundOverlay(pitsOverlayOptions);
+				pitsVisible = true;
+				resultsFragment.updateResults(0);
 			}
 		}
-		if (requestCode == INITIAL_LOAD && data == null) {
-			raster = new DemData();
-			DemFile demToLoad = dems.get(0);
-			String filename = demToLoad.getFilename();
-			new ReadDemDataTask(this, raster, filename).execute(demToLoad.getFileUri());
-		}
+
+		demLoadUtils.loadClickedDem(latLng);
 	}
 
-	public static void onFileRead(DemData rasters) {
-		field.setBitmap(rasters.getBitmap());
-		field.setBounds(rasters.getBounds());
-
-		map.animateCamera(CameraUpdateFactory.newLatLngBounds(rasters.getBounds(), 50));
-		field.updatePolyLine();
-		updateColors(field);
-		new LoadWatershedDatasetTask(rasters).execute();
-	}
-
-	public static void updateColors(Field field) {
-		if (!currentlyDrawing) {
-			currentlyDrawing = true;
-			int width = field.getElevationBitmap().getWidth();
-			int height = field.getElevationBitmap().getHeight();
-			int[] pixels = new int[width * height];
-			field.getElevationBitmap().getPixels(pixels, 0, width, 0, 0, width, height);
-			Bitmap bitmap = field.getElevationBitmap().copy(field.getElevationBitmap().getConfig(), true);
-			int c;
-			for (int i = 0; i < (width * height); i++) {
-				c=pixels[i] & 0xFF;
-				pixels[i] =  hsvColors[c];
-			}
-			bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
-			field.setBitmap(bitmap);
-			//remove old map overlay and create new one
-			field.createOverlay();
-			if (dem_visible) {
-				demOverlay.setTransparency(demAlpha);
-			}
-			currentlyDrawing = false;
-		}
-	}
-
-	//copies a file from assets to SD 
-	//Rename to copySampleDem()
-	//Group: DemLoader
-	private void copyAssets() {
-		AssetManager assetManager = getAssets();
-		String[] files = null;
-		try {
-			files = assetManager.list("");
-		} catch (IOException e) {
-		}
-		String filename = "Feldun.tif";
-		InputStream in = null;
-		OutputStream out = null;
-		try {
-			in = assetManager.open(filename);
-			File outFile = new File(demDirectory, filename);
-			out = new FileOutputStream(outFile);
-			copyFile(in, out);
-			in.close();
-			in = null;
-			out.flush();
-			out.close();
-			out = null;
-		} catch(IOException e) {
-		}
-	}
-
-	//just incorporate into copyAssets?
-	//Group: DemLoader
-	private void copyFile(InputStream in, OutputStream out) throws IOException {
-		byte[] buffer = new byte[1024];
-		int read;
-		while((read = in.read(buffer)) != -1){
-			out.write(buffer, 0, read);
-		}
-	}
-
-	//tell app which DEM is currently loaded, so it isn't reloaded if clicked on
-	//
-	public void setCurrentlyLoaded(String filename) {
-		DemFile dem;
-		for(int i = 0; i<dems.size(); i++) {
-			dem = dems.get(i);
-			if (filename.equals(dem.getFilename())) {
-				currentlyLoaded = dem;
-			}
-		}
-	}
-
-	//Group: DemLoader
-	private URI UritoURI(Uri fileUri) {
-		URI juri = null;
-		try {
-			juri = new java.net.URI(fileUri.getScheme(),
-					fileUri.getSchemeSpecificPart(),
-					fileUri.getFragment());
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
-		return juri;
-	}
-
-	//remove polylines showing DEM outlines, for use when DEM folder is changed
-	// Group: DemOutlineUI
-	public static void removeDemOutlines() {
-		Iterator<Polyline> outlines = demOutlines.iterator();
-		while(outlines.hasNext()) {
-			outlines.next().remove();
-		}
-	}
-
-//	@Override
-//	public void onMarkerDragEnd(Marker marker) {
-//		
-//	}
-//	@Override
-//	public void onMarkerDrag(Marker marker) {		
-//	}
-//	@Override
-//	public void onMarkerDragStart(Marker marker) {		
-//	}
 
 	@Override
 	public boolean onPointDrag(ATKPointView pointView) {
@@ -897,7 +592,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 	public boolean onPointDragEnd(ATKPointView pointView) {
 		if (!delineating) {
 			delineating = true;
-			delineationPointRC = field.getXYFromLatLng(delineationMarker.getAtkPoint().position);
+			delineationPointRC = demLoadUtils.getLoadedDemData().getXYFromLatLng(delineationMarker.getAtkPoint().position);
 			if (delineationPointRC == null) {
 				Toast toast = Toast.makeText(context, "Location to delineate must be within bounded area.", Toast.LENGTH_SHORT);
 				toast.show();
@@ -907,7 +602,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 				}
 //				delineationMarkerOptions.position(delineationMarker.getAtkPoint().position)
 //				.title(delineationPointRC.toString());
-				new DelineateWatershedTask(delineationPointRC).execute();			
+				new DelineateWatershedTask(delineationPointRC, demLoadUtils).execute();			
 			}
 		}
 		delineating = false;
@@ -922,5 +617,11 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 	@Override
 	public boolean onPointClick(ATKPointView pointView) {
 		return false;
+	}
+
+	// Access to the local instance of demLoadUtils
+	@Override
+	public DemLoadUtils getDemLoadUtils() {
+		return demLoadUtils;
 	}
 }

@@ -10,7 +10,10 @@ import android.os.AsyncTask;
 
 public class DelineateWatershedTask extends AsyncTask <String, Bitmap, Bitmap> implements DelineationListener {
 
-	public DelineateWatershedTask(Point delineationPoint) {
+	private DemLoadUtils demLoadUtils;
+
+	public DelineateWatershedTask(Point delineationPoint, DemLoadUtils demLoadUtils) {
+		this.demLoadUtils = demLoadUtils;
 	}
 
 	protected void onPreExecute() {
@@ -33,9 +36,9 @@ public class DelineateWatershedTask extends AsyncTask <String, Bitmap, Bitmap> i
 		} else {
 			MainActivity.delineationOverlayOptions = new GroundOverlayOptions()
 			.image(BitmapDescriptorFactory.fromBitmap(result))
-			.positionFromBounds(MainActivity.field.getFieldBounds())
+			.positionFromBounds(demLoadUtils.getLoadedDemData().getBounds())
 			.transparency(MainActivity.delineationAlpha)
-			.visible(MainActivity.delineation_visible)
+			.visible(MainActivity.delineationVisible)
 			.zIndex(3);
 			MainActivity.delineationOverlay = MainActivity.map.addGroundOverlay(MainActivity.delineationOverlayOptions);
 		}
@@ -70,7 +73,8 @@ public class DelineateWatershedTask extends AsyncTask <String, Bitmap, Bitmap> i
 	}
 
 	@Override
-	public void delineationDone() {		
+	public void delineationDone() {
+		MainActivity.delineating = false;
 	}
 
 	@Override

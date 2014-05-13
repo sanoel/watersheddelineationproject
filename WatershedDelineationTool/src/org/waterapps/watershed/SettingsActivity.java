@@ -16,6 +16,7 @@ import org.waterapps.watershed.R;
  */
 public class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     static Preference demDirPref;
+    MainActivity mainActivity;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -48,25 +49,25 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
                 pref.setEnabled(true);
             }
         } else if (key.equals("pref_key_dem_vis")) {
-            MainActivity.dem_visible = sharedPreferences.getBoolean("pref_key_dem_vis", true);
+            MainActivity.demVisible = sharedPreferences.getBoolean("pref_key_dem_vis", true);
         } else if (key.equals("pref_key_pits_vis")) {
-            MainActivity.pits_visible = sharedPreferences.getBoolean("pref_key_pits_vis", true);
+            MainActivity.pitsVisible = sharedPreferences.getBoolean("pref_key_pits_vis", true);
         } else if (key.equals("pref_key_delin_vis")) {
-        	MainActivity.delineation_visible = sharedPreferences.getBoolean("pref_key_pits_vis", true);
+        	MainActivity.delineationVisible = sharedPreferences.getBoolean("pref_key_pits_vis", true);
         } else if (key.equals("pref_key_puddle_vis")) {
-        	MainActivity.puddle_visible = sharedPreferences.getBoolean("pref_key_pits_vis", true);
+        	MainActivity.puddleVisible = sharedPreferences.getBoolean("pref_key_pits_vis", true);
         } else if (key.equals("pref_key_dem_trans_level")) {
             int alpha = sharedPreferences.getInt(key, 50);
-            MainActivity.setDemAlpha(1 - (float) alpha / 100.0f);
+            mainActivity.setDemAlpha(1 - (float) alpha / 100.0f);
         } else if (key.equals("pref_key_delin_trans_level")) {
             int alpha = sharedPreferences.getInt(key, 50);
-            MainActivity.setDelineationAlpha(1 - (float) alpha / 100.0f);
+            mainActivity.setDelineationAlpha(1 - (float) alpha / 100.0f);
         } else if (key.equals("pref_key_puddle_trans_level")) {
             int alpha = sharedPreferences.getInt(key, 50);
-            MainActivity.setPuddleAlpha(1 - (float) alpha / 100.0f);
+            mainActivity.setPuddleAlpha(1 - (float) alpha / 100.0f);
         } else if (key.equals("pref_key_catchments_trans_level")) {
             int alpha = sharedPreferences.getInt(key, 50);
-            MainActivity.setCatchmentsAlpha(1 - (float) alpha / 100.0f);
+            mainActivity.setCatchmentsAlpha(1 - (float) alpha / 100.0f);
         } else if (key.equals("pref_rainfall_amount")) {
         	RainfallSimConfig.setDepth(Float.parseFloat(sharedPreferences.getString("pref_rainfall_amount", "1.0")));
         	Preference pref = findPreference("pref_rainfall_amount");
