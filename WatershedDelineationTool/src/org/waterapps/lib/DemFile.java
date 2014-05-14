@@ -25,40 +25,25 @@ import com.openatk.openatklib.atkmap.views.ATKPointView;
 import com.openatk.openatklib.atkmap.views.ATKPolygonView;
 
 public class DemFile {
-    private int id;
     private LatLngBounds bounds;
     private String filePath;
     private String timestamp;
-    private URI fileUri;
+//    private URI fileUri;
     private ATKPolygonView outlinePolygon;
     private ATKPointView tapPoint;
 
-    public DemFile(int id, File file, LatLngBounds bounds, ATKMap map) {
-    	DateFormat df = DateFormat.getDateInstance();
-        this.fileUri = URI.create(Uri.fromFile(file).toString());
-        this.id = id;
-        this.bounds = bounds;
-        this.filePath = file.getPath();
-        this.timestamp = df.format(file.lastModified());
-        
-        // Draw the boundary on the map
-		List<LatLng> list = new ArrayList<LatLng>();
-		list.add(bounds.northeast);
-        list.add(bounds.southwest);
-        ATKPolygon poly = new ATKPolygon(this.getFilePath(), list);
-        poly.viewOptions.setFillColor(Color.argb(64, 255, 0, 0));
-        poly.viewOptions.setStrokeColor(Color.RED);
-        setOutlinePolygon(map.addPolygon(poly));
-        
-        //Add the tappable marker to the map
-        ATKPoint point = new ATKPoint(this.filePath, new GeoRectangle(this.getBounds()).center());
-        setTapPoint(map.addPoint(point));
-        tapPoint.setIcon(textToBitmap("Tap here to load"));
-    }
+    public DemFile(LatLngBounds bounds, String filePath, String timestamp,
+			ATKPolygonView outlinePolygon, ATKPointView tapPoint) {
+		super();
+		this.bounds = bounds;
+		this.filePath = filePath;
+		this.timestamp = timestamp;
+		this.outlinePolygon = outlinePolygon;
+		this.tapPoint = tapPoint;
+	}
 
     public DemFile(File file, LatLngBounds bounds, ATKMap map) {
     	DateFormat df = DateFormat.getDateInstance();
-        this.fileUri = URI.create(Uri.fromFile(file).toString());
         this.bounds = bounds;
         this.filePath = file.getPath();
         this.timestamp = df.format(file.lastModified());
@@ -80,8 +65,8 @@ public class DemFile {
         getTapPoint().setIcon(textToBitmap("Tap here to load"));
     }
 
-    public DemFile() {
-
+    public DemFile(DemFile demFile) {
+    	this(demFile.getBounds(), demFile.getFilePath(), demFile.getTimestamp(), demFile.getOutlinePolygon(), demFile.getTapPoint());
     }
     
     public Bitmap textToBitmap(String text) {
@@ -115,22 +100,6 @@ public class DemFile {
     		this.getOutlinePolygon().remove();
     	}
     	this.setOutlinePolygon(polygon);
-    }
-    
-    public URI getFileUri() {
-        return fileUri;
-    }
-
-    public void setFileUri(URI fileUri) {
-        this.fileUri = fileUri;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getFilePath() {
@@ -171,6 +140,10 @@ public class DemFile {
 
 	public void setOutlinePolygon(ATKPolygonView outlinePolygon) {
 		this.outlinePolygon = outlinePolygon;
+	}
+
+	public DemData readDemData() {
+		return new DemData(this);	
 	}
 
 }

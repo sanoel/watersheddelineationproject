@@ -40,10 +40,10 @@ public class GdalUtils {
      * @param filename: filename of the geotiff to read
      * @return DemData
      */
-    public static DemData readDemData(DemData demData, String filePath) {
+    public static DemData readDemData(DemData demData) {
 
         //TODO Test this filepath value
-        Dataset dataset = gdal.Open(filePath);
+        Dataset dataset = gdal.Open(demData.getFilePath());
         
         int xSize = dataset.getRasterXSize();
         int ySize = dataset.getRasterYSize();
@@ -52,15 +52,17 @@ public class GdalUtils {
         // Read raster band from gdal dataset and remove nodata cells
         int[] bands = {1};
         float[] pixels = new float[count];
+        
         dataset.ReadRaster(0, 0, xSize, ySize, xSize, ySize, gdalconstConstants.GDT_Float32, pixels, bands, 0, 0, 0);
-        demData.setElevationData(oneDToTwoDArray(pixels, xSize, ySize, demData));
         Double [] nodata = new Double[1];
         dataset.GetRasterBand(1).GetNoDataValue(nodata);
+        demData.setNoDataVal(nodata[0].floatValue());
+        demData.setElevationData(oneDToTwoDArray(pixels, xSize, ySize, demData));
         removeDemNoData(demData.getElevationData(), nodata[0].floatValue(), 5);
         
         float cellSize = (float) dataset.GetGeoTransform()[1];
         demData.setCellSize(cellSize);
-        demData.setNoDataVal(nodata[0].floatValue());
+        
         dataset.delete();
         dataset = null;
         return demData;
@@ -109,8 +111,10 @@ public class GdalUtils {
     	for(int i=0; i<xSize; i++) {
             for(int j=0; j<ySize; j++) {
                 arrayOut[i][j] = array[i+(xSize*j)];
-                if (arrayOut[i][j] < demData.getMinElevation()) demData.setMinElevation(arrayOut[i][j]);
-                if (arrayOut[i][j] > demData.getMaxElevation()) demData.setMaxElevation(arrayOut[i][j]);
+                if (arrayOut[i][j] != demData.getNoDataVal()) {
+                	if (arrayOut[i][j] < demData.getMinElevation()) demData.setMinElevation(arrayOut[i][j]);
+                	if (arrayOut[i][j] > demData.getMaxElevation()) demData.setMaxElevation(arrayOut[i][j]);
+                }
             }
         }
 		return arrayOut;

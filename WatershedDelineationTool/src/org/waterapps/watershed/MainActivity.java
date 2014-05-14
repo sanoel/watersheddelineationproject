@@ -8,6 +8,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
+
 import org.waterapps.lib.DemData;
 import org.waterapps.lib.DemLoadUtils;
 import org.waterapps.watershed.HelpActivity;
@@ -39,6 +40,7 @@ import android.graphics.Point;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,7 +49,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends FragmentActivity implements ATKMapClickListener, ProgressFragmentListener, ATKPointDragListener, ATKPointClickListener, ResultsPanelFragmentListener, WmacDemLoadUtilsListener{
+public class MainActivity extends FragmentActivity implements ATKMapClickListener, ProgressFragmentListener, ATKPointDragListener, ATKPointClickListener, ResultsPanelFragmentListener, WmacDemLoadUtilsListener {
 	ProgressFragmentListener pflistener;
 	LocationManager locationManager;
 	private static Menu myMenu = null;
@@ -127,8 +129,9 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		RainfallSimConfig.setDepth(Float.parseFloat(prefs.getString("pref_rainfall_amount", "1.0f")));
-		String demDirectory = prefs.getString("dem_dir", Environment.getExternalStorageDirectory().toString() + "/dem");
-		demLoadUtils = new DemLoadUtils(this, context, demDirectory, map, prefs);
+		
+		demLoadUtils = new DemLoadUtils(context, map, prefs);
+		demLoadUtils.registerWmacDemLoadUtilsListener(this);
 		
 		//show help on first app start
 		firstStart = prefs.getBoolean("first_start", true);
@@ -147,6 +150,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 		//load initial DEM if help menu isn't being shown
 		if(!firstStart) {
 			demLoadUtils.loadInitialDem();
+			
 		}
 		wsdProgressBar = (ProgressBar)findViewById(R.id.progress_bar);
 		wsdProgressBar.setVisibility(View.INVISIBLE);
@@ -552,11 +556,6 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 			demLoadUtils.setNewDemDirectory(data.getStringExtra("directory"));
 		}
 	}
-
-	@Override
-	public void onFileRead(DemData demData) {
-		new LoadWatershedDatasetTask(demData).execute();
-	}
 	
 	public void onMapClick (LatLng latLng) {
 		if (pitsVisible) {
@@ -619,9 +618,8 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 		return false;
 	}
 
-	// Access to the local instance of demLoadUtils
 	@Override
-	public DemLoadUtils getDemLoadUtils() {
-		return demLoadUtils;
+	public void onDemDataLoad() {
+		new LoadWatershedDatasetTask(demLoadUtils.getLoadedDemData()).execute();
 	}
 }

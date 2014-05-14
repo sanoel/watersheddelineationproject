@@ -3,8 +3,6 @@ package org.waterapps.lib;
 import static android.graphics.Color.HSVToColor;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Point;
 import android.widget.SeekBar;
 
@@ -23,7 +21,6 @@ import java.util.Arrays;
  * Stores data read in from a DEM, as both raw floats and a bitmap representation.
  */
 public class DemData extends DemFile{
-	private DemFile demFile;
 	private float[][] elevationData;
 	private float cellSize;
 	private float noDataVal;
@@ -33,22 +30,15 @@ public class DemData extends DemFile{
 	private float maxElevation;
 	private Bitmap elevationBitmap;
 	private GroundOverlay demOverlay;
+	WmacDemLoadUtilsListener listener;
 
 	private int hsvColors[] = new int[256];
 	private int hsvTransparentColors[];
-
-	public DemData(DemFile demFile) {
-		this.demFile = demFile;		
-	}
 	
-	public DemData(DemFile demFile, Context context) {
-		this.demFile = demFile;
-		//TODO Does this even need to be a task?		
-		new ReadDemDataTask(this, context, demFile.getFilePath()).execute(new File(demFile.getFilePath()).toURI());
-	}
-
-	public DemData() {
-		setElevationData(new float[1][1]);
+	public DemData(DemFile demFile) {
+		super(demFile);
+		this.minElevation = Float.NEGATIVE_INFINITY;
+		this.minElevation = Float.POSITIVE_INFINITY;		
 	}
 
 	/**
@@ -70,13 +60,13 @@ public class DemData extends DemFile{
 	 * @return (x,y) Point corresponding to the given latitude, longitude 
 	 */
 	public Point getXYFromLatLng(LatLng latlng) {
-		if (demFile.getBounds().contains(latlng)) {
+		if (getBounds().contains(latlng)) {
 			//use linear interpolation to figure out which pixel to get data from
 			//should be accurate since fields <= ~1 mile wide
-			double north = demFile.getBounds().northeast.latitude;
-			double east = demFile.getBounds().northeast.longitude;
-			double south = demFile.getBounds().southwest.latitude;
-			double west = demFile.getBounds().southwest.longitude;
+			double north = getBounds().northeast.latitude;
+			double east = getBounds().northeast.longitude;
+			double south = getBounds().southwest.latitude;
+			double west = getBounds().southwest.longitude;
 
 			int width = getElevationBitmap().getWidth();
 			int height = getElevationBitmap().getHeight();
@@ -97,7 +87,7 @@ public class DemData extends DemFile{
 	 * @return Elevation of the point
 	 */
 	public double elevationFromLatLng(LatLng latlng) {
-		if (demFile.getBounds().contains(latlng)) {
+		if (getBounds().contains(latlng)) {
 			Point xy = getXYFromLatLng(latlng);
 			int waterLevel = getElevationBitmap().getPixel((int)xy.x, (int)xy.y);
 
@@ -125,11 +115,11 @@ public class DemData extends DemFile{
 		return groundOverlay;
 	}
 
-	GroundOverlay createOverlay(ATKMap map) {
+	public GroundOverlay createOverlay(ATKMap map) {
 		BitmapDescriptor image = BitmapDescriptorFactory.fromBitmap(elevationBitmap);
 		demOverlay = map.addGroundOverlay(new GroundOverlayOptions()
 		.image(image)
-		.positionFromBounds(demFile.getBounds())
+		.positionFromBounds(getBounds())
 		.transparency(0));
 		demOverlay.setVisible(true);
 		return demOverlay;
@@ -140,28 +130,20 @@ public class DemData extends DemFile{
 	 * @return Generated bitmap
 	 */
 	public void makeElevationBitmap() {
-		int intpixels[] = new int[this.elevationData.length*this.elevationData[0].length];
-
-		for(int c = 0; c<this.elevationData.length; c++) {
-			for(int m=0; m<this.elevationData[0].length; m++) {
-				//normalize each float to a value from 0-255
-
-				double range = 255/(this.maxElevation-this.minElevation);
-				intpixels[c+(m*this.elevationData.length)] = (int)(range*(this.getElevationData()[c][m]-this.minElevation));
+		setHsv();
+		int pixels[] = new int[this.elevationData.length*this.elevationData[0].length];
+		double range = 255/(this.maxElevation-this.minElevation);
+		for(int r = 0; r < this.elevationData.length; r++) {
+			for(int c = 0; c < this.elevationData[0].length; c++) {
+				//integer from 0 - 255
+				pixels[r+(c*this.elevationData.length)] = (int)(range*(this.elevationData[r][c]-this.minElevation));
+				//colormapped color
+				pixels[r+(c*this.elevationData.length)] = hsvColors[pixels[r+(c*this.elevationData.length)]];
+				//black and white
+//				pixels[r+(c*this.elevationData.length)] = Color.argb(255, pixels[r+(c*this.elevationData.length)], pixels[r+(c*this.elevationData.length)], pixels[r+(c*this.elevationData.length)]);
 			}
 		}
-
-		for(int r = 0; r < this.elevationData[0].length*this.elevationData.length; r++) {
-			//intpixels[l] = 0xFF000000 + intpixels[l] + intpixels[l]<<8 + intpixels[l]<<16;
-			intpixels[r] = Color.argb(255, intpixels[r], intpixels[r], intpixels[r]);
-		}
-		elevationBitmap = Bitmap.createBitmap(intpixels, 0, this.elevationData.length, this.elevationData.length, this.elevationData[0].length, Bitmap.Config.ARGB_8888);
-
-		Matrix matrix = new Matrix();
-		matrix.postRotate(90);
-		elevationBitmap = Bitmap.createBitmap(elevationBitmap, 0, 0,
-				elevationBitmap.getWidth(), elevationBitmap.getHeight(),
-				matrix, true);
+		elevationBitmap = Bitmap.createBitmap(pixels, 0, this.elevationData.length, this.elevationData.length, this.elevationData[0].length, Bitmap.Config.ARGB_8888);
 	}
 	
 	// Get colors for DEM coloring
@@ -232,11 +214,7 @@ public class DemData extends DemFile{
 	}
 
 	public DemFile getDemFile() {
-		return demFile;
-	}
-
-	public void setDemFile(DemFile demFile) {
-		this.demFile = demFile;
+		return this;
 	}
 
 	public void setSeekBar(SeekBar bar) {
