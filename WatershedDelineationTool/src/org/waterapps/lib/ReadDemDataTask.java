@@ -44,7 +44,7 @@ public class ReadDemDataTask extends AsyncTask<Uri, Integer, DemData> {
         dialog = new ProgressDialog(context);
         dialog.setMax(100);
         dialog.setMessage("Loading elevations into map from " + demFile.getFilePath().split("/")[demFile.getFilePath().split("/").length-1]);
-        dialog.show();
+//        dialog.show();
     }
 
     /**
@@ -59,7 +59,7 @@ public class ReadDemDataTask extends AsyncTask<Uri, Integer, DemData> {
 //        this.demData  = new DemData(demFile);
         this.demData = GdalUtils.readDemData(demData);
 		demLoadUtils.setLoadedDemData(demData);
-		demLoadUtils.getLoadedDemData().makeElevationBitmap();
+		demLoadUtils.getLoadedDemData().makeElevationBitmap(context);
         publishProgress(100);
         return demData;
 	}
@@ -78,6 +78,7 @@ public class ReadDemDataTask extends AsyncTask<Uri, Integer, DemData> {
 		demData.getDemFile().getTapPoint().hide();
 		demLoadUtils.getLoadedDemData().createOverlay(demLoadUtils.getMap());
 		demLoadUtils.getMap().animateCamera(CameraUpdateFactory.newLatLngBounds(demLoadUtils.getLoadedDemData().getDemFile().getBounds(), 50));
+		demLoadUtils.setDemFilePreference(demData.getFilePath());
         dialog.dismiss();
         listener.onDemDataLoad();
     }

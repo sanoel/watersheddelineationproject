@@ -73,7 +73,8 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 	public static int selectedPitIndex;
 	private static final int FIRST_START = 42;
 	private static final int INITIAL_LOAD = 6502;
-	private static final int FILE_PATH_CHOOSER = 6503;
+	private static final int FILE_CHOOSER = 6503;
+	private static final int FILE_PATH_CHOOSER = 6504;
 	
 	public static boolean demVisible;
 	public static boolean pitsVisible;
@@ -89,11 +90,9 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 	public static GroundOverlay pitsOverlay;
 	public static GroundOverlay delineationOverlay;
 	public static GroundOverlay puddleOverlay;
-//	public static GroundOverlay demOverlay;
-	public static GroundOverlayOptions pitsOverlayOptions;
-	public static GroundOverlayOptions delineationOverlayOptions;
-	public static GroundOverlayOptions puddleOverlayOptions;
-	public static GroundOverlayOptions demOverlayOptions;
+//	public static GroundOverlayOptions pitsOverlayOptions;
+//	public static GroundOverlayOptions delineationOverlayOptions;
+//	public static GroundOverlayOptions puddleOverlayOptions;
 	
 	public static ATKPointView delineationMarker;
 	public static Point delineationPointRC;
@@ -241,14 +240,14 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Choose DEM Menu Item
 		if (item.getItemId() == R.id.test) {
-			WatershedDataset.getCLU();
-//			WatershedDataset.Polygonize();
+//			WatershedDataset.getCLU();
+			WatershedDataset.polygonize(demLoadUtils.getLoadedDemData().getFilePath(), WatershedDataset.pits.pitIdMatrix, demLoadUtils.getDemDirectory()+"/catchments");
 			return true;
 		}
 		else if (item.getItemId() == R.id.menu_choose_dem) {
 			Intent i = new Intent(this, DataFileChooser.class);
 			i.putExtra("path", demLoadUtils.getDemDirectory());
-			startActivityForResult(i, 1);
+			startActivityForResult(i, FILE_CHOOSER);
 			return true;
 		}  else if (item.getItemId() == R.id.menu_settings) {
 			Bundle data = new Bundle();
@@ -282,6 +281,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 			if (demLoadUtils.getLoadedDemData().getGroundOverlay() != null) {
 				demLoadUtils.getLoadedDemData().getGroundOverlay().remove();
 			}
+			demLoadUtils = null;
 			finish();
 			startActivity(getIntent());
 			return true;
@@ -296,7 +296,6 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 				demVisible = true;
 			}
 			demLoadUtils.getLoadedDemData().getGroundOverlay().setVisible(demVisible);
-			demOverlayOptions.visible(demVisible);
 			edit.putBoolean("pref_key_dem_vis", demVisible);
 			edit.commit();
 			item.setChecked(demVisible);
@@ -309,8 +308,6 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 				pitsVisible = true;
 			}
 			pitsOverlay.setVisible(pitsVisible);
-			pitsOverlayOptions.visible(pitsVisible);
-
 			edit.putBoolean("pref_key_pits_vis", pitsVisible);
 			edit.commit();
 			item.setChecked(pitsVisible);
@@ -324,7 +321,6 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 				showResultsFragment();
 			}
 			delineationOverlay.setVisible(delineationVisible);
-			delineationOverlayOptions.visible(delineationVisible);
 			edit.putBoolean("pref_key_delin_vis", delineationVisible);
 			edit.commit();
 			item.setChecked(delineationVisible);
@@ -337,7 +333,6 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 				puddleVisible = true;
 			}
 			puddleOverlay.setVisible(puddleVisible);
-			puddleOverlayOptions.visible(puddleVisible);
 
 			edit.putBoolean("pref_key_puddle_vis", puddleVisible);
 			edit.commit();
@@ -370,7 +365,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 		
 		//Show the catchment/pit map
 		pitsVisible = true;
-		pitsOverlayOptions = new GroundOverlayOptions()
+		GroundOverlayOptions pitsOverlayOptions = new GroundOverlayOptions()
 		.image(BitmapDescriptorFactory.fromBitmap(watershedDataset.altDrawPits()))
 		.positionFromBounds(demLoadUtils.getLoadedDemData().getBounds())
 		.transparency(pitsAlpha)
@@ -380,7 +375,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 
 		// Show the filled areas
 		puddleVisible = true;
-		puddleOverlayOptions = new GroundOverlayOptions()
+		GroundOverlayOptions puddleOverlayOptions = new GroundOverlayOptions()
 		.image(BitmapDescriptorFactory.fromBitmap(watershedDataset.drawPuddles()))
 		.positionFromBounds(demLoadUtils.getLoadedDemData().getBounds())
 		.transparency(puddleAlpha)
@@ -553,7 +548,14 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 		}
 		
 		if (requestCode == FILE_PATH_CHOOSER) {
-			demLoadUtils.setNewDemDirectory(data.getStringExtra("directory"));
+			demLoadUtils.setNewDemDirectory(data.getStringExtra("directory"));  //edits the path pref within this function
+		}
+		
+		if (requestCode == FILE_CHOOSER) {
+			if (data.getData().toString().contains(".tif")) {
+				demLoadUtils.setDemDirectoryPreference(data.getData().getPath()); //edits the file pref within this function
+				demLoadUtils.loadDem(data.getStringExtra("filepath"));
+			}
 		}
 	}
 	
@@ -566,7 +568,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 //				} else {
 				selectedPitIndex = WatershedDataset.pits.getIndexOf(WatershedDataset.pits.pitIdMatrix[clickedPoint.y][clickedPoint.x]);
 				pitsOverlay.remove();
-				pitsOverlayOptions = new GroundOverlayOptions()
+				GroundOverlayOptions pitsOverlayOptions = new GroundOverlayOptions()
 				.image(BitmapDescriptorFactory.fromBitmap(WatershedDataset.pits.highlightSelectedPit(selectedPitIndex)))
 				.positionFromBounds(demLoadUtils.getLoadedDemData().getBounds())
 				.transparency(pitsAlpha)

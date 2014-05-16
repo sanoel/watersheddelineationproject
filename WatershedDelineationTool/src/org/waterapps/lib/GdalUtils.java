@@ -107,13 +107,13 @@ public class GdalUtils {
      * @return DEM data
      */
     private static float[][] oneDToTwoDArray(float[] array, int xSize, int ySize, DemData demData) {
-    	float[][] arrayOut = new float[xSize][ySize];
-    	for(int i=0; i<xSize; i++) {
-            for(int j=0; j<ySize; j++) {
-                arrayOut[i][j] = array[i+(xSize*j)];
-                if (arrayOut[i][j] != demData.getNoDataVal()) {
-                	if (arrayOut[i][j] < demData.getMinElevation()) demData.setMinElevation(arrayOut[i][j]);
-                	if (arrayOut[i][j] > demData.getMaxElevation()) demData.setMaxElevation(arrayOut[i][j]);
+    	float[][] arrayOut = new float[ySize][xSize];
+    	for(int c = 0; c < xSize; c++) {
+            for(int r = 0; r < ySize; r++) {
+                arrayOut[r][c] = array[(xSize - 1 - c)+(xSize*r)];
+                if (arrayOut[r][c] != demData.getNoDataVal()) {
+                	if (arrayOut[r][c] < demData.getMinElevation()) demData.setMinElevation(arrayOut[r][c]);
+                	if (arrayOut[r][c] > demData.getMaxElevation()) demData.setMaxElevation(arrayOut[r][c]);
                 }
             }
         }

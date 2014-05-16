@@ -1,12 +1,6 @@
 
 package org.waterapps.watershed;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,6 +9,7 @@ import java.util.Random;
 
 import org.gdal.gdal.Dataset;
 import org.gdal.gdal.gdal;
+import org.gdal.gdalconst.gdalconst;
 import org.gdal.gdalconst.gdalconstConstants;
 import org.gdal.ogr.Driver;
 import org.gdal.ogr.Feature;
@@ -23,22 +18,16 @@ import org.gdal.ogr.Geometry;
 import org.gdal.ogr.Layer;
 import org.gdal.ogr.ogr;
 import org.gdal.osr.SpatialReference;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.util.Log;
-import android.util.Xml;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.PolygonOptions;
+import com.openatk.openatklib.atkmap.models.ATKPolygon;
 
 public class WatershedDataset {
 	FlowDirectionCell[][] flowDirection;
@@ -46,7 +35,7 @@ public class WatershedDataset {
 	float[][] dem;
 	float[][] drainage;
 	public static PitRaster pits;
-	float cellSize;
+	static float cellSize;
 	static int status = 0;
 	static String statusMessage = "Reading DEM";
 	public static float noDataVal;
@@ -856,6 +845,7 @@ public class WatershedDataset {
 		
 		Bitmap icon = BitmapFactory.decodeResource(MainActivity.context.getResources(), R.drawable.watershedelineation, options);
 		Bitmap delinBitmap = Bitmap.createScaledBitmap(icon, this.dem[0].length, this.dem.length, false);
+		//skip outside cells
 		for (int r = 1; r < this.dem.length-1; r++) {
 			for (int c = 1; c < this.dem[0].length-1; c++) {
 				delinBitmap.setPixel(this.dem[0].length - 1 - c, r, Color.TRANSPARENT);
@@ -1008,163 +998,243 @@ public class WatershedDataset {
 		return puddleBitmap;
 	}
 	
-	public static void PolygonizeA() {
-		// Create GDAL Dataset, create a Band, and write the data to that Band
+	public static void polygonize(String rasterFilePath, int[][] rasterData, String fileOutPath) {
 		gdal.AllRegister();
 		ogr.RegisterAll();
-		String directory = Environment.getExternalStorageDirectory().getAbsolutePath() + "/dem/";
-		String filepath = directory + "Feldun.tif";
-		Dataset dataset = gdal.Open(filepath);
-		org.gdal.gdal.Driver rdriver = gdal.GetDriverByName("GTiff");
-		int[] array = new int[pits.pitIdMatrix.length * pits.pitIdMatrix[0].length];
+		Dataset demRaster = gdal.Open(rasterFilePath);
+		
+		
+		// Transform from 2D array to 1D array
+		int[] array = new int[rasterData.length * rasterData[0].length];
 		int i = 0;
-		for (int r = 0; r < pits.pitIdMatrix.length; r++) {
-			for (int c = 0; c < pits.pitIdMatrix[0].length; c++) {
-				array[i] = pits.pitIdMatrix[r][pits.pitIdMatrix[0].length - c - 1]; 
+		for (int r = 0; r < rasterData.length; r++) {
+			for (int c = 0; c < rasterData[0].length; c++) {
+				array[i] = rasterData[r][rasterData[0].length - c - 1]; 
 				i++;
 			}
 		}
 		
 		//mask the outer rows
+		int[] mask = new int[rasterData.length * rasterData[0].length];
 		i = 0;
-		for (int r = 0; r < pits.pitIdMatrix.length; r++) {
-			for (int c = 0; c < pits.pitIdMatrix[0].length; c++) {
-				if ((r == 0) || (r == pits.pitIdMatrix.length - 1) || (c == 0) || (c == pits.pitIdMatrix[0].length - 1)) { 
-					array[i] = 0;
+		for (int r = 0; r < rasterData.length; r++) {
+			for (int c = 0; c < rasterData[0].length; c++) {
+				if ((r == 0) || (r == rasterData.length - 1) || (c == 0) || (c == rasterData[0].length - 1)) { 
+					mask[i] = 0;
 					i++;
 				} else {
-					array[i] = 1;
+					mask[i] = 1;
 				}
 			}
 		}
 		
-		String file = directory+"FCatchments.tif";
-		Dataset dswrite = rdriver.CreateCopy(file, dataset);
-		dswrite.WriteRaster(0, 0, dswrite.getRasterXSize(), dswrite.getRasterYSize(), dswrite.getRasterXSize(), dswrite.getRasterYSize(), gdalconstConstants.GDT_Int32, array, new int[]{1}, 0, 0, 0);
-		dswrite.FlushCache();
-						
-		Driver driver = ogr.GetDriverByName("ESRI Shapefile");
-
-		// When creating this datasource, the file must not already exist.  This check can be handled with android. 
-		org.gdal.ogr.DataSource ds = driver.CreateDataSource(directory + "s3.shp");
-		SpatialReference srs = new SpatialReference(dswrite.GetProjection());
-		layer = ds.CreateLayer("NewLayer", srs);
-		gdal.Polygonize(dswrite.GetRasterBand(1), null, layer, 0);
-		ds.SyncToDisk();
-//		dst = ogr.Open("http://10.184.198.200:8080/geoserver/wfs?service=wfs&version=2.4.5&request=GetFeature&typename=WMAC:clu_public_a_in001&bbox=670000,4490000,670050,4495000");
-//		Log.w("dst isnull1?", Boolean.toString(dst == null));
-	}
-	
-	public static void Polygonize() {
-		gdal.AllRegister();
-		ogr.RegisterAll();
-		String directory = Environment.getExternalStorageDirectory().getAbsolutePath() + "/dem/";
-		String filepath = directory + "Feldun.tif";
-		Dataset dataset = gdal.Open(filepath);
+		//Create a new file that is a copy of the DEM geotiff so that the georeferencing data is identical and write the new band data to this file
+		org.gdal.gdal.Driver rdriver = gdal.GetDriverByName("GTiff");
+		Dataset catchmentRaster = rdriver.CreateCopy(fileOutPath, demRaster);
+		catchmentRaster.WriteRaster(0, 0, catchmentRaster.getRasterXSize(), catchmentRaster.getRasterYSize(), catchmentRaster.getRasterXSize(), catchmentRaster.getRasterYSize(), gdalconstConstants.GDT_Int32, array, new int[]{1}, 0, 0, 0);
+		catchmentRaster.AddBand(gdalconst.GDT_UInt16);
+		catchmentRaster.WriteRaster(0, 0, catchmentRaster.getRasterXSize(), catchmentRaster.getRasterYSize(), catchmentRaster.getRasterXSize(), catchmentRaster.getRasterYSize(), gdalconstConstants.GDT_Int32, mask, new int[]{2}, 0, 0, 0);
+		//TODO Test if this does anything useful
+		catchmentRaster.FlushCache();
 		
-		Driver driver = ogr.GetDriverByName("ESRI Shapefile");
-		org.gdal.ogr.DataSource openDS = ogr.Open(directory + "s3.shp");
+		// When creating this new datasource, the file must not already exist.
+		Driver shpDriver = ogr.GetDriverByName("ESRI Shapefile");
+		org.gdal.ogr.DataSource catchmentVector = shpDriver.CreateDataSource(fileOutPath+".shp");
+		SpatialReference srs = new SpatialReference(catchmentRaster.GetProjection());
+		Layer catchmentLayer = catchmentVector.CreateLayer("NewLayer", srs);
+		gdal.Polygonize(catchmentRaster.GetRasterBand(1), catchmentRaster.GetRasterBand(2), catchmentLayer, 0);
+		
 		SpatialReference wgs = new SpatialReference("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]");
-		SpatialReference srs = new SpatialReference(dataset.GetProjection());
-		Log.w("srs", Boolean.toString(srs == null));
-		org.gdal.ogr.DataSource newds = driver.CreateDataSource(directory + "s4.shp");
-		Layer lay = newds.CreateLayer("temp", wgs);
-		FeatureDefn outFeatureDef = lay.GetLayerDefn();
-		
-		for (int i = 0; i < layer.GetFeatureCount(); i++) {
-			Feature inFeature = layer.GetNextFeature();
-			Feature outFeature = new Feature(outFeatureDef);
+		FeatureDefn outFeatureDef = catchmentLayer.GetLayerDefn();
+		// for each polygon
+		float epsilon = (float) Math.sqrt(2*Math.pow(cellSize, 2))/2;
+		for (int i1 = catchmentLayer.GetFeatureCount()-1; i1 > -1; i1--) {
+			Feature inFeature = catchmentLayer.GetNextFeature();
+//			Feature outFeature = new Feature(outFeatureDef);
 			Geometry geometry = inFeature.GetGeometryRef();
-			geometry.TransformTo(wgs);
-			PolygonOptions polyOpts = new PolygonOptions().strokeColor(Color.RED).fillColor(Color.TRANSPARENT);
-			for (int j = 0; j < geometry.GetGeometryRef(0).GetPointCount(); j++) {
-				polyOpts.add(new LatLng(geometry.GetGeometryRef(0).GetPoint(j)[1], geometry.GetGeometryRef(0).GetPoint(j)[0]));
-				MainActivity.map.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(geometry.GetGeometryRef(0).GetPoint(j)[1], geometry.GetGeometryRef(0).GetPoint(j)[0])));
-			}
-//			MainActivity.map.addPolygon(polyOpts);
-			outFeature.SetGeometry(geometry);
-			lay.CreateFeature(outFeature);			
+//			float[][] points = new float[geometry.GetGeometryRef(0).GetPointCount()][2];
+//			for (int j = 0; j < geometry.GetGeometryRef(0).GetPointCount(); j++) {
+//				points[j][0] = (float) geometry.GetGeometryRef(0).GetPoint(j)[1];
+//				points[j][0] = (float) geometry.GetGeometryRef(0).GetPoint(j)[0];
+//			}
+//			points = ramerDouglasPeucker(points, epsilon);
+//			geometry.delete();
+//			geometry.s
+			Geometry geom = geometry.Simplify(epsilon);
+			Log.w("geometry null", Boolean.toString(geom == null));
+			inFeature.SetGeometryDirectly(geom);
+//			Log.w("geometry null", Boolean.toString(geom == null));
+//			int success = catchmentLayer.CreateFeature(inFeature);
+//			Log.w("success?", Boolean.toString(success == 0));
+//			catchmentLayer.DeleteFeature(i1);
 		}
-		openDS.SyncToDisk();
+//		catchmentLayer.
+		for (int i1 = 0; i1 < catchmentLayer.GetFeatureCount(); i1++) {
+			Feature inFeature = catchmentLayer.GetNextFeature();
+			Geometry geometry = inFeature.GetGeometryRef();
+			Log.w("error check", gdal.GetLastErrorMsg());
+			geometry.TransformTo(wgs);
+			//		points = ramerDouglasPeucker(points, epsilon);
+			List<LatLng> list = new ArrayList<LatLng>();
+			for (int j = 0; j < geometry.GetGeometryRef(0).GetPointCount(); j++) {
+				list.add(new LatLng(geometry.GetGeometryRef(0).GetPoint(j)[1], geometry.GetGeometryRef(0).GetPoint(j)[0]));
+			}
+			ATKPolygon poly = new ATKPolygon("test", list);
+			MainActivity.map.addPolygon(poly);
+			poly.viewOptions.setFillColor(Color.TRANSPARENT);
+			poly.viewOptions.setStrokeColor(Color.RED);
+			//		outFeature.SetGeometry(geometry);
+			//		catchmentLayer.CreateFeature(outFeature);
+	}
+        
+		catchmentVector.SyncToDisk();
+		//TODO Test if this is what actually makes the file
+		catchmentVector.SyncToDisk();
+		
+		
+		
+		demRaster.delete();
+		catchmentRaster.delete();
+		catchmentVector.delete();
+		catchmentLayer.delete();
+		
+		demRaster = null;
+		catchmentRaster = null;
+		catchmentVector = null;
+		catchmentLayer = null;
 	}
 	
-	
-	public static void getCLU () {
+//	public static void PolygonizeA() {
+//		// Create GDAL Dataset, create a Band, and write the data to that Band
 //		gdal.AllRegister();
 //		ogr.RegisterAll();
-//		Log.w("dst isnull?", Boolean.toString(dst == null));
-//		Log.w("dst", dst.toString());
-//		Layer lay = dst.GetLayer(0);
-//		Feature inFeature = lay.GetNextFeature();
-//		Geometry geometry = inFeature.GetGeometryRef();
-//		PolygonOptions polyOpts = new PolygonOptions().strokeColor(Color.RED).fillColor(Color.RED);
-		
-		StringBuilder json = new StringBuilder();
-		DataInputStream is = null;
-		try {
-            Uri.Builder uri = Uri.parse("http://10.184.218.252:8080/geoserver/wfs?service=wfs&version=2.4.5&request=GetFeature&typename=WMAC:clu_public_a_in001&bbox=670000,4490000,670050,4495000").buildUpon();
-            uri.appendQueryParameter("outputFormat", "application/json");
-//            uri.appendQueryParameter("BBOX", "" + env.minX + "," + env.minY + "," + env.maxX + "," + env.maxY);
-            Log.d("WFSVectorDataSource: url " + uri.build().toString(), "ok");
-            HttpURLConnection conn = (HttpURLConnection) new URL(uri.toString()).openConnection();
-            is = new DataInputStream(conn.getInputStream());
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-            while (true) {
-                String line = reader.readLine();
-                if (line == null) {
-                    break;
-                }
-                json.append(line);
-            }
-        } catch (Exception e) {
-            Log.e("WFSVectorDataSource: exception: " + e, "error");
-        }
-		Log.w("json", json.toString());
-		
-		try {
-            XmlPullParser parser = Xml.newPullParser();
-            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-            parser.setInput(is, null);
-            try {
-				parser.nextTag();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} catch (XmlPullParserException e) {
-		
-		}
-		
-		//Construct Query
-//		<wfs:GetFeature service="WFS" version="1.1.0" 
-//				  xmlns:topp="http://www.openplans.org/topp" 
-//				  xmlns:wfs="http://www.opengis.net/wfs" 
-//				  xmlns="http://www.opengis.net/ogc" 
-//				  xmlns:gml="http://www.opengis.net/gml" 
-//				  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-//				  xsi:schemaLocation="http://www.opengis.net/wfs
-//				                      http://schemas.opengis.net/wfs/1.1.0/wfs.xsd"> 
-//				  <wfs:Query typeName="topp:states"> 
-//				    <Filter> 
-//				      <Touches> 
-//				        <PropertyName>the_geom</PropertyName> 
-//				<gml:Polygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326"> 
-//				<gml:outerBoundaryIs> 
-//				<gml:LinearRing> 
-//				<gml:coordinates>-75.270721,38.02758800000001 -75.242584,38.028526 -75.298859,37.962875 -75.33918,37.888783000000004 -75.386078,37.875652 -75.34481,37.90191299999999 -75.378571,37.900974000000005 -75.346687,37.918797 -75.270721,38.02758800000001</gml:coordinates> 
-//				</gml:LinearRing> 
-//				</gml:outerBoundaryIs> 
-//				</gml:Polygon> 
-//				        </Touches> 
-//				      </Filter> 
-//				  </wfs:Query> 
-//				</wfs:GetFeature>
-
-		//		for (int j = 0; j < geometry.GetGeometryRef(0).GetPointCount(); j++) {
-//			Log.w("geom item", "x=" + float.toString(geometry.GetGeometryRef(0).GetPoint(j)[0]) + " y=" + float.toString(geometry.GetGeometryRef(0).GetPoint(j)[1]));
-//			polyOpts.add(new LatLng(geometry.GetGeometryRef(0).GetPoint(j)[1], geometry.GetGeometryRef(0).GetPoint(j)[0]));
-//			MainActivity.map.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(geometry.GetGeometryRef(0).GetPoint(j)[1], geometry.GetGeometryRef(0).GetPoint(j)[0])));
+//		String directory = Environment.getExternalStorageDirectory().getAbsolutePath() + "/dem/";
+//		String filepath = directory + "Feldun.tif";
+//		Dataset dataset = gdal.Open(filepath);
+//		org.gdal.gdal.Driver rdriver = gdal.GetDriverByName("GTiff");
+//		
+//		// Transform from 2D array to 1D array
+//		int[] array = new int[pits.pitIdMatrix.length * pits.pitIdMatrix[0].length];
+//		int i = 0;
+//		for (int r = 0; r < pits.pitIdMatrix.length; r++) {
+//			for (int c = 0; c < pits.pitIdMatrix[0].length; c++) {
+//				array[i] = pits.pitIdMatrix[r][pits.pitIdMatrix[0].length - c - 1]; 
+//				i++;
+//			}
 //		}
-//		MainActivity.map.addPolygon(polyOpts);
-
+//		
+//		//mask the outer rows
+//		i = 0;
+//		for (int r = 0; r < pits.pitIdMatrix.length; r++) {
+//			for (int c = 0; c < pits.pitIdMatrix[0].length; c++) {
+//				if ((r == 0) || (r == pits.pitIdMatrix.length - 1) || (c == 0) || (c == pits.pitIdMatrix[0].length - 1)) { 
+//					array[i] = 0;
+//					i++;
+//				} else {
+//					array[i] = 1;
+//				}
+//			}
+//		}
+//		
+//		//write dataset containing desired raster data
+//		String file = directory+"FCatchments.tif";
+//		Dataset dswrite = rdriver.CreateCopy(file, dataset);
+//		dswrite.WriteRaster(0, 0, dswrite.getRasterXSize(), dswrite.getRasterYSize(), dswrite.getRasterXSize(), dswrite.getRasterYSize(), gdalconstConstants.GDT_Int32, array, new int[]{1}, 0, 0, 0);
+//		dswrite.FlushCache();
+//		
+//		//polygonize
+//		Driver driver = ogr.GetDriverByName("ESRI Shapefile");
+//		// When creating this datasource, the file must not already exist.  This check can be handled with android. 
+//		org.gdal.ogr.DataSource ds = driver.CreateDataSource(directory + "s3.shp");
+//		SpatialReference srs = new SpatialReference(dswrite.GetProjection());
+//		layer = ds.CreateLayer("NewLayer", srs);
+//		gdal.Polygonize(dswrite.GetRasterBand(1), null, layer, 0);
+//		ds.SyncToDisk();
+//	}
+//	
+//	public static void Polygonize(int[][] rasterData) {
+//		gdal.AllRegister();
+//		ogr.RegisterAll();
+//		String directory = Environment.getExternalStorageDirectory().getAbsolutePath() + "/dem/";
+//		String filepath = directory + "Feldun.tif";
+//		Dataset dataset = gdal.Open(filepath);
+//		
+//		Driver driver = ogr.GetDriverByName("ESRI Shapefile");
+//		org.gdal.ogr.DataSource openDS = ogr.Open(directory + "s3.shp");
+//		SpatialReference wgs = new SpatialReference("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]");
+//		SpatialReference srs = new SpatialReference(dataset.GetProjection());
+//		org.gdal.ogr.DataSource newds = driver.CreateDataSource(directory + "s4.shp");
+//		Layer lay = newds.CreateLayer("temp", wgs);
+//		FeatureDefn outFeatureDef = lay.GetLayerDefn();
+//		
+//		// for each polygon
+//		for (int i = 0; i < layer.GetFeatureCount(); i++) {
+//			Feature inFeature = layer.GetNextFeature();
+//			Feature outFeature = new Feature(outFeatureDef);
+//			Geometry geometry = inFeature.GetGeometryRef();
+//			geometry.TransformTo(wgs);
+//			PolygonOptions polyOpts = new PolygonOptions().strokeColor(Color.RED).fillColor(Color.TRANSPARENT);
+//			for (int j = 0; j < geometry.GetGeometryRef(0).GetPointCount(); j++) {
+//				polyOpts.add(new LatLng(geometry.GetGeometryRef(0).GetPoint(j)[1], geometry.GetGeometryRef(0).GetPoint(j)[0]));
+//				MainActivity.map.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(geometry.GetGeometryRef(0).GetPoint(j)[1], geometry.GetGeometryRef(0).GetPoint(j)[0])));
+//			}
+////			MainActivity.map.addPolygon(polyOpts);
+//			outFeature.SetGeometry(geometry);
+//			lay.CreateFeature(outFeature);			
+//		}
+//		openDS.SyncToDisk();
+//	}
+		
+	//karthaus.nl/rdp/js/rdp.js
+	public static float[][] ramerDouglasPeucker(float[][] points, float epsilon){
+	    float[] firstPoint = points[0];
+	    float[] lastPoint = points[points.length-1];
+	    if (points.length < 3){
+	        return points;
+	    }
+	    
+	    //Get intermediate point of maximum perpendicular distance to the straight line
+	    int index=-1;
+	    float dist=0;
+	    for (int i = 1; i < points.length-1; i++){
+	        float cDist = findPerpendicularDistance(points[i],firstPoint,lastPoint);
+	        if (cDist>dist){
+	            dist=cDist;
+	            index=i;
+	        }
+	    }
+	    
+	    //
+	    if (dist > epsilon){
+	        // iterate
+	        float[][] l1 = Arrays.copyOfRange(points, 0, index + 1);
+	        float[][] l2 = Arrays.copyOfRange(points, index, points.length - 1);
+	        float[][] r1 = ramerDouglasPeucker(l1,epsilon);
+	        float[][] r2 = ramerDouglasPeucker(l2,epsilon);
+	        // concat r2 to r1 minus the end/startpoint that will be the same
+	        float[][] rs= new float[2][r1.length + r2.length - 1];
+	        System.arraycopy(r1, 0, rs, 0, r1.length);
+	        System.arraycopy(r2, 1, rs, r1.length, r2.length-1); //skip first point of r2 as it is a duplicate of the last point of r1
+	        return rs;
+	    }else{
+	        return new float[][]{firstPoint, lastPoint};
+	    }
+	}
+	    
+	    
+	public static float findPerpendicularDistance(float[] p, float[] p1, float[] p2) {
+	    // if start and end point are on the same x the distance is the difference in X.
+	    float result;
+	    float slope;
+	    float intercept;
+	    if (p1[0]==p2[0]){
+	        result=Math.abs(p[0]-p1[0]);
+	    }else{
+	        slope = (p2[1] - p1[1]) / (p2[0] - p1[0]);
+	        intercept = p1[1] - (slope * p1[0]);
+	        result = (float) (Math.abs(slope * p[0] - p[1] + intercept) / Math.sqrt(Math.pow(slope, 2) + 1));
+	    }
+	   
+	    return result;
 	}
 }

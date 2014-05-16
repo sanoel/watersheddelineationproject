@@ -3,6 +3,7 @@ package org.waterapps.lib;
 import static android.graphics.Color.HSVToColor;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.widget.SeekBar;
 
@@ -17,6 +18,8 @@ import com.openatk.openatklib.atkmap.ATKMap;
 import java.io.File;
 import java.util.Arrays;
 
+import org.waterapps.watershed.R;
+
 /**
  * Stores data read in from a DEM, as both raw floats and a bitmap representation.
  */
@@ -30,7 +33,7 @@ public class DemData extends DemFile{
 	private float maxElevation;
 	private Bitmap elevationBitmap;
 	private GroundOverlay demOverlay;
-	WmacDemLoadUtilsListener listener;
+
 
 	private int hsvColors[] = new int[256];
 	private int hsvTransparentColors[];
@@ -129,21 +132,24 @@ public class DemData extends DemFile{
 	 * Generates a bitmap from the raw float data
 	 * @return Generated bitmap
 	 */
-	public void makeElevationBitmap() {
+	public void makeElevationBitmap(Context context) {
 		setHsv();
-		int pixels[] = new int[this.elevationData.length*this.elevationData[0].length];
+//		int pixels[] = new int[this.elevationData.length*this.elevationData[0].length];
 		double range = 255/(this.maxElevation-this.minElevation);
+		Bitmap b = BitmapFactory.decodeResource(context.getResources(), R.drawable.watershedicon);
+		elevationBitmap = Bitmap.createScaledBitmap(b, this.elevationData[0].length, this.elevationData.length, false);
 		for(int r = 0; r < this.elevationData.length; r++) {
 			for(int c = 0; c < this.elevationData[0].length; c++) {
-				//integer from 0 - 255
-				pixels[r+(c*this.elevationData.length)] = (int)(range*(this.elevationData[r][c]-this.minElevation));
+				//scale as integer from 0 - 255 and convert to hsv color using hsvColors lookup array
+				elevationBitmap.setPixel(this.elevationData[0].length - 1 - c, r, hsvColors[(int)(range*(this.elevationData[r][c]-this.minElevation))]);
+//				pixels[r+(c*this.elevationData.length)] = (int)(range*(this.elevationData[r][c]-this.minElevation));
 				//colormapped color
-				pixels[r+(c*this.elevationData.length)] = hsvColors[pixels[r+(c*this.elevationData.length)]];
+//				pixels[r+(c*this.elevationData.length)] = hsvColors[pixels[r+(c*this.elevationData.length)]];
 				//black and white
 //				pixels[r+(c*this.elevationData.length)] = Color.argb(255, pixels[r+(c*this.elevationData.length)], pixels[r+(c*this.elevationData.length)], pixels[r+(c*this.elevationData.length)]);
 			}
 		}
-		elevationBitmap = Bitmap.createBitmap(pixels, 0, this.elevationData.length, this.elevationData.length, this.elevationData[0].length, Bitmap.Config.ARGB_8888);
+//		elevationBitmap = Bitmap.createBitmap(pixels, 0, this.elevationData.length, this.elevationData.length, this.elevationData[0].length, Bitmap.Config.ARGB_8888);
 	}
 	
 	// Get colors for DEM coloring
@@ -158,7 +164,7 @@ public class DemData extends DemFile{
 		}
 	}
 	
-	//TODO this seems a bit waterplane specific
+	//TODO This function is waterplane-specific
 	/**
 	 * Calculates the upper and lower slider values to set for the field, based on upper/lower 3% of data
 	 */

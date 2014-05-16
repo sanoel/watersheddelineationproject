@@ -34,42 +34,14 @@ public class DelineateWatershedTask extends AsyncTask <String, Bitmap, Bitmap> i
 		if (MainActivity.delineationOverlay != null) {
 			MainActivity.delineationOverlay.setImage(BitmapDescriptorFactory.fromBitmap(result));
 		} else {
-			MainActivity.delineationOverlayOptions = new GroundOverlayOptions()
+			GroundOverlayOptions delineationOverlayOptions = new GroundOverlayOptions()
 			.image(BitmapDescriptorFactory.fromBitmap(result))
 			.positionFromBounds(demLoadUtils.getLoadedDemData().getBounds())
 			.transparency(MainActivity.delineationAlpha)
 			.visible(MainActivity.delineationVisible)
 			.zIndex(3);
-			MainActivity.delineationOverlay = MainActivity.map.addGroundOverlay(MainActivity.delineationOverlayOptions);
+			MainActivity.delineationOverlay = MainActivity.map.addGroundOverlay(delineationOverlayOptions);
 		}
-		
-//		MainActivity.map.clear();
-//		System.gc();
-		//Redraw delineation marker
-//		MainActivity.delineationMarker = MainActivity.map.addMarker(MainActivity.delineationMarkerOptions);
-//		MainActivity.delineationMarker.setDraggable(true);
-//		
-//		//Redraw the delineation overlay
-//		MainActivity.delineationOverlayOptions = new GroundOverlayOptions()
-//		.image(BitmapDescriptorFactory.fromBitmap(result))
-//		.positionFromBounds(MainActivity.field.getFieldBounds())
-//		.transparency(MainActivity.delineationAlpha)
-//		.visible(MainActivity.delineation_visible)
-//		.zIndex(3);
-//		MainActivity.delineationOverlay = MainActivity.map.addGroundOverlay(MainActivity.delineationOverlayOptions);
-//		
-//		//Redraw elevation DEM
-//		MainActivity.demOverlay = MainActivity.map.addGroundOverlay(MainActivity.demOverlayOptions);
-//		
-//		//Redraw catchments
-//		MainActivity.pitsOverlay = MainActivity.map.addGroundOverlay(MainActivity.pitsOverlayOptions);
-//		
-//		//Redraw puddles map
-//		MainActivity.puddleOverlay = MainActivity.map.addGroundOverlay(MainActivity.puddleOverlayOptions);
-//		
-//		if(MainActivity.resultsFragment != null){
-//			MainActivity.resultsFragment.updateResults(1);
-//		}
 	}
 
 	@Override
