@@ -1,46 +1,23 @@
 package org.waterapps.watershed;
 
-import com.filebrowser.DataFileChooser;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.UiSettings;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.GroundOverlay;
-import com.google.android.gms.maps.model.GroundOverlayOptions;
-import com.google.android.gms.maps.model.LatLng;
-
-import org.waterapps.lib.DemData;
 import org.waterapps.lib.DemLoadUtils;
-import org.waterapps.watershed.HelpActivity;
-import org.waterapps.watershed.R;
+import org.waterapps.lib.WmacDemLoadUtilsListener;
 import org.waterapps.watershed.ProgressFragment.ProgressFragmentListener;
 import org.waterapps.watershed.ResultsPanelFragment.ResultsPanelFragmentListener;
 
-import com.openatk.openatklib.atkmap.ATKMap;
-import com.openatk.openatklib.atkmap.ATKSupportMapFragment;
-import com.openatk.openatklib.atkmap.listeners.ATKMapClickListener;
-import com.openatk.openatklib.atkmap.listeners.ATKPointClickListener;
-import com.openatk.openatklib.atkmap.listeners.ATKPointDragListener;
-import com.openatk.openatklib.atkmap.models.ATKPoint;
-import com.openatk.openatklib.atkmap.views.ATKPointView;
-
-import org.waterapps.lib.*;
-
-import android.location.LocationManager;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Environment;
-import android.preference.PreferenceManager;
 import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.location.LocationManager;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -48,6 +25,22 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.filebrowser.DataFileChooser;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.GroundOverlay;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.openatk.openatklib.atkmap.ATKMap;
+import com.openatk.openatklib.atkmap.ATKSupportMapFragment;
+import com.openatk.openatklib.atkmap.listeners.ATKMapClickListener;
+import com.openatk.openatklib.atkmap.listeners.ATKPointClickListener;
+import com.openatk.openatklib.atkmap.listeners.ATKPointDragListener;
+import com.openatk.openatklib.atkmap.models.ATKPoint;
+import com.openatk.openatklib.atkmap.views.ATKPointView;
 
 public class MainActivity extends FragmentActivity implements ATKMapClickListener, ProgressFragmentListener, ATKPointDragListener, ATKPointClickListener, ResultsPanelFragmentListener, WmacDemLoadUtilsListener {
 	ProgressFragmentListener pflistener;
