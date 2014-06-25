@@ -1,5 +1,7 @@
 package org.waterapps.watershed;
 
+import java.io.File;
+
 import org.waterapps.lib.DemLoadUtils;
 import org.waterapps.lib.WmacDemLoadUtilsListener;
 import org.waterapps.watershed.ProgressFragment.ProgressFragmentListener;
@@ -18,6 +20,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -270,6 +273,7 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 			if (puddleOverlay != null) {
 				puddleOverlay.remove();
 				puddleOverlay = null;
+				
 			}
 			if (demLoadUtils.getLoadedDemData().getGroundOverlay() != null) {
 				demLoadUtils.getLoadedDemData().getGroundOverlay().remove();
@@ -535,10 +539,10 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 			return;
 		}
 		// Handle return from the file chooser
-		if (requestCode == INITIAL_LOAD) {
-			demLoadUtils.loadFileChooserData(data);
-			return;
-		}
+//		if (requestCode == INITIAL_LOAD) {
+//			demLoadUtils.loadFileChooserData(data);
+//			return;
+//		}
 		
 		if (requestCode == FILE_PATH_CHOOSER) {
 			demLoadUtils.setNewDemDirectory(data.getStringExtra("directory"));  //edits the path pref within this function
@@ -546,8 +550,11 @@ public class MainActivity extends FragmentActivity implements ATKMapClickListene
 		
 		if (requestCode == FILE_CHOOSER) {
 			if (data.getData().toString().contains(".tif")) {
-				demLoadUtils.setDemDirectoryPreference(data.getData().getPath()); //edits the file pref within this function
-				demLoadUtils.loadDem(data.getStringExtra("filepath"));
+				File f = new File(data.getData().getPath());
+				if (demLoadUtils.getDemDirectory() != f.getParent()) {
+					demLoadUtils.setNewDemDirectory(f.getParent());
+				}
+				demLoadUtils.loadDem(data.getData().getPath());
 			}
 		}
 	}

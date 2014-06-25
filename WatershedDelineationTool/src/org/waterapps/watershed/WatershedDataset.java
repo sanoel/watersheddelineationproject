@@ -58,6 +58,7 @@ public class WatershedDataset {
 
 	// Constructor
 	public WatershedDataset(float[][] inputDem, float inputCellSize, float inputNoDataVal, AsyncTask task) {
+		System.currentTimeMillis();
 
 		if(task instanceof WatershedDatasetListener) {
 			listener = (WatershedDatasetListener) task;
@@ -87,6 +88,7 @@ public class WatershedDataset {
 		pits = new PitRaster(dem, drainage, flowDirection, cellSize, listener);
 		pits.constructPitRaster(pitCellCount);
 		listener.simulationOnProgress(status, "Done");
+		
 	}
 
 	public void recalculatePitsForNewRainfall() {
@@ -244,6 +246,7 @@ public class WatershedDataset {
 	// Wrapper function that simulates the rainfall event to iteratively fill depressions until the rainfall event ends or no more remain
 	@SuppressWarnings("unchecked")
 	public boolean fillPits() {
+		long start = System.currentTimeMillis();
 		statusMessage = "Filling and Merging Depressions";
 		int fill_counter = 0;
 		Collections.sort(WatershedDataset.pits.pitDataList);
@@ -255,11 +258,11 @@ public class WatershedDataset {
 			// then all remaining pits are negative and filling is complete.  
 			while (WatershedDataset.pits.pitDataList.get(0).pitId > 0) {
 				altMergePits();
-				if (WatershedDataset.pits.pitDataList.isEmpty()) {
-					// No more pits exist, filling is 100% complete for this simulation
-					status = 100;
-					break;
-				}
+//				if (WatershedDataset.pits.pitDataList.isEmpty()) {
+//					// No more pits exist, filling is 100% complete for this simulation
+//					status = 100;
+//					break;
+//				}
 				Collections.sort(WatershedDataset.pits.pitDataList);
 
 				fill_counter++;
@@ -270,16 +273,17 @@ public class WatershedDataset {
 			// Handle rainfall/duration-based filling.
 			while (WatershedDataset.pits.pitDataList.get(0).spilloverTime < RainfallSimConfig.rainfallDuration) {
 				altMergePits();
-				if (WatershedDataset.pits.pitDataList.isEmpty()) {
-					// No more pits exist, filling is 100% complete for this simulation
-					status = 100;
-					break;
-				}
+//				if (WatershedDataset.pits.pitDataList.isEmpty()) {
+//					// No more pits exist, filling is 100% complete for this simulation
+//					status = 100;
+//					break;
+//				}
 //				System.out.println(" ");
 				fill_counter++;
 				status = (int) (100 * (fill_counter/(float)numberOfPits));
 				listener.simulationOnProgress(status, "Simulating Rainfall");
 			}
+			Log.w("runtime", Long.toString((System.currentTimeMillis()-start)));
 		}
 //		resolveFlowDirectionParents();
 		// time has expired for the storm event, filling is 100% complete for this simulation
@@ -998,11 +1002,55 @@ public class WatershedDataset {
 		return puddleBitmap;
 	}
 	
-	public static void polygonize(String rasterFilePath, int[][] rasterData, String fileOutPath) {
+	public static void writeRaster(String rasterFilePath, int[][] rasterData, String fileOutPath) {
 		gdal.AllRegister();
 		ogr.RegisterAll();
 		Dataset demRaster = gdal.Open(rasterFilePath);
 		
+		// Transform from 2D array to 1D array
+		int[] array = new int[rasterData.length * rasterData[0].length];
+		int i = 0;
+		for (int r = 0; r < rasterData.length; r++) {
+			for (int c = 0; c < rasterData[0].length; c++) {
+				array[i] = rasterData[r][rasterData[0].length - c - 1]; 
+				i++;
+			}
+		}
+		
+		//mask the outer rows
+		int[] mask = new int[rasterData.length * rasterData[0].length];
+		i = 0;
+		for (int r = 0; r < rasterData.length; r++) {
+			for (int c = 0; c < rasterData[0].length; c++) {
+				if ((r == 0) || (r == rasterData.length - 1) || (c == 0) || (c == rasterData[0].length - 1)) { 
+					mask[i] = 0;
+					i++;
+				} else {
+					mask[i] = 1;
+				}
+			}
+		}
+		
+		//Create a new file that is a copy of the DEM geotiff so that the georeferencing data is identical and write the new band data to this file
+		org.gdal.gdal.Driver rdriver = gdal.GetDriverByName("GTiff");
+		Dataset catchmentRaster = rdriver.Create(fileOutPath, rasterData[0].length, rasterData.length);
+		catchmentRaster.AddBand(gdalconst.GDT_UInt16);
+		catchmentRaster.WriteRaster(0, 0, catchmentRaster.getRasterXSize(), catchmentRaster.getRasterYSize(), catchmentRaster.getRasterXSize(), catchmentRaster.getRasterYSize(), gdalconstConstants.GDT_Int32, array, new int[]{1}, 0, 0, 0);
+		//TODO Test if this does anything useful
+		catchmentRaster.FlushCache();
+		
+		demRaster.delete();
+		catchmentRaster.delete();
+		
+		demRaster = null;
+		catchmentRaster = null;
+	}
+	
+	
+	public static void polygonize(String rasterFilePath, int[][] rasterData, String fileOutPath) {
+		gdal.AllRegister();
+		ogr.RegisterAll();
+		Dataset demRaster = gdal.Open(rasterFilePath);
 		
 		// Transform from 2D array to 1D array
 		int[] array = new int[rasterData.length * rasterData[0].length];
@@ -1085,8 +1133,8 @@ public class WatershedDataset {
 			poly.viewOptions.setStrokeColor(Color.RED);
 			//		outFeature.SetGeometry(geometry);
 			//		catchmentLayer.CreateFeature(outFeature);
-	}
-        
+		}
+		
 		catchmentVector.SyncToDisk();
 		//TODO Test if this is what actually makes the file
 		catchmentVector.SyncToDisk();
