@@ -1,0 +1,58 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><script type="text/javascript">
+(function(){(function(){function d(a){this.t={};this.tick=function(a,b,c){this.t[a]=[void 0!=c?c:(new Date).getTime(),b]};this.tick("start",null,a)}var a=new d;window.jstiming={Timer:d,load:a};if(window.performance&&window.performance.timing){var a=window.performance.timing,b=window.jstiming.load,c=a.navigationStart,a=a.responseStart;0<c&&a>=c&&(b.tick("_wtsrt",void 0,c),b.tick("wtsrt_","_wtsrt",a),b.tick("tbsd_","wtsrt_"))}try{a=null,window.chrome&&window.chrome.csi&&(a=Math.floor(window.chrome.csi().pageT),
+b&&0<c&&(b.tick("_tbnd",void 0,window.chrome.csi().startE),b.tick("tbnd_","_tbnd",c))),null==a&&window.gtbExternal&&(a=window.gtbExternal.pageT()),null==a&&window.external&&(a=window.external.pageT,b&&0<c&&(b.tick("_tbnd",void 0,window.external.startE),b.tick("tbnd_","_tbnd",c))),a&&(window.jstiming.pt=a)}catch(e){}})();})()
+</script><script type="text/javascript">var KX_timer = new window.jstiming.Timer(); KX_timer.name = 'published';</script><title>How to load DEMs</title><style type="text/css">
+      body {
+        font-family: arial, sans, sans-serif;
+        margin: 0;
+      }
+
+      iframe {
+        border: 0;
+        frameborder: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #header, #footer {
+        background: #f0f0f0;
+        padding: 10px 10px;
+      }
+
+      #header {
+        border-bottom: 1px #ccc solid;
+      }
+
+      #footer {
+        border-top: 1px #ccc solid;
+        border-bottom: 1px #ccc solid;
+        font-size: 13;
+      }
+
+      #contents {
+        margin: 6px;
+      }
+
+      .dash {
+        padding: 0 6px;
+      }
+    </style></head><body><div id="header">How to load DEMs</div><div id="contents"><style type="text/css">ol{margin:0;padding:0}.c7{max-width:468pt;background-color:#ffffff;padding:72pt 72pt 72pt 72pt}.c2{color:#1155cc;text-decoration:underline}.c0{color:inherit;text-decoration:inherit}.c5{vertical-align:super}.c3{color:#ff0000}.c4{height:11pt}.c6{font-style:italic}.c1{direction:ltr}.title{padding-top:0pt;line-height:1.15;text-align:left;color:#000000;font-size:21pt;font-family:"Trebuchet MS";padding-bottom:0pt}.subtitle{padding-top:0pt;line-height:1.15;text-align:left;color:#666666;font-style:italic;font-size:13pt;font-family:"Trebuchet MS";padding-bottom:10pt}li{color:#000000;font-size:11pt;font-family:"Arial"}p{color:#000000;font-size:11pt;margin:0;font-family:"Arial"}h1{padding-top:10pt;line-height:1.15;text-align:left;color:#000000;font-size:16pt;font-family:"Trebuchet MS";padding-bottom:0pt}h2{padding-top:10pt;line-height:1.15;text-align:left;color:#000000;font-size:13pt;font-family:"Trebuchet MS";font-weight:bold;padding-bottom:0pt}h3{padding-top:8pt;line-height:1.15;text-align:left;color:#666666;font-size:12pt;font-family:"Trebuchet MS";font-weight:bold;padding-bottom:0pt}h4{padding-top:8pt;line-height:1.15;text-align:left;color:#666666;font-size:11pt;text-decoration:underline;font-family:"Trebuchet MS";padding-bottom:0pt}h5{padding-top:8pt;line-height:1.15;text-align:left;color:#666666;font-size:11pt;font-family:"Trebuchet MS";padding-bottom:0pt}h6{padding-top:8pt;line-height:1.15;text-align:left;color:#666666;font-style:italic;font-size:11pt;font-family:"Trebuchet MS";padding-bottom:0pt}</style><p class="c1"><span>1. Go to </span><span class="c2"><a class="c0" href="http://www.opentopography.org/">http://www.opentopography.org/</a></span><span>, and click on the ‘data’ tab</span></p><p class="c1"><img src="HowToDownloadDEMs_files/pubimage_003.png" height="144" width="519"></p><p class="c4 c1"><span></span></p><p class="c1"><span>2. Zoom in on your area of interest and click ‘SELECT A REGION’, then click and drag to select the region to download.</span></p><p class="c1"><img src="HowToDownloadDEMs_files/pubimage_007.png" height="312" width="503"></p><p class="c1"><span>3. Scroll down below the map and click ‘Get Data’</span></p><p class="c1"><img src="HowToDownloadDEMs_files/pubimage_002.png" height="275" width="566"></p><p class="c1"><span>4.Set the Output Coordinate System to UTM (this is the only currently supported coordinate system).</span></p><p class="c1"><img src="HowToDownloadDEMs_files/pubimage.png" height="34" width="656"></p><p class="c1"><span>5.. Scroll down to the ‘DEM Generation (Local Gridding)’ section of the page. </span></p><p class="c1"><span>Here,
+ set Grid Resolution appropriately. Directly below the map is a box with
+ the text ‘The selection area contains approximately </span><span class="c6">N</span><span>&nbsp;points.’ An appropriate grid resolution is one such that N/Resolution</span><span class="c5">2</span><span>&lt;1,000,000. </span><span class="c3"></span></p><p class="c1"><span>Also, set ‘Grid Format’ to GeoTiff.</span></p><p class="c1"><img src="HowToDownloadDEMs_files/pubimage_005.png" height="155" width="642"></p><p class="c4 c1"><span></span></p><p class="c1"><span>6..
+ Scroll to the bottom of the page. Enter your email address in the email
+ field (results will be sent to this address), and then click Submit. </span></p><p class="c1"><img src="HowToDownloadDEMs_files/pubimage_004.png" height="111" width="708"></p><p class="c1"><span>7.
+ Wait. Depending on the size of the region you selected and server load,
+ it can take anywhere from a few seconds to a few minutes to complete.</span></p><p class="c4 c1"><span></span></p><p class="c1"><span>8.
+ Once processing completes, there will be a page section titled DEM 
+Results. Scroll here and click on dems.tar.gz to download the DEM file.</span></p><p class="c1 c4"><span></span></p><p class="c1"><img src="HowToDownloadDEMs_files/pubimage_006.png" height="84" width="464"></p><p class="c4 c1"><span></span></p><p class="c1"><span>9. Optional: Rename dems.tar.gz to something more descriptive.</span></p><p class="c4 c1"><span></span></p><p class="c1"><span>10. Repeat steps 1-9 for any additional areas of interest.</span></p><p class="c4 c1"><span></span></p><p class="c1"><span>11.
+ Connect your Android device to your computer. Create a folder on the 
+device called dem and then extract the contents of the .tar.gz files to 
+this folder. </span></p><p class="c1"><span>Note: If you don’t already have software for extracting .tar.gz files, you can download free software such as </span><span class="c2"><a class="c0" href="http://www.7-zip.org/">7zip</a></span><span>&nbsp;(Windows) or </span><span class="c2"><a class="c0" href="http://www.zipeg.com/">Zipeg</a></span><span>&nbsp;(Mac or Windows).</span></p><p class="c4 c1"><span></span></p><p class="c1"><span>12. Download the app from the </span><span class="c2"><a class="c0" href="https://play.google.com/store/apps/details?id=com.precisionag.watershed">Play Store</a></span></p><p class="c4 c1"><span></span></p><p class="c1"><span>13. Open the app and it will now be able to use your DEMs.</span></p></div><div id="footer"><span>Published by <a target="_blank" title="Learn more about Google Drive" href="https://docs.google.com/">Google Drive</a></span><span class="dash">–</span><a href="https://docs.google.com/abuse?id=1wbW1bW9VAri9TpQdO027M7FvcLOF6Ode1hRHdNDloJY">Report Abuse</a></div><script type="text/javascript">
+(function(){if(window.jstiming){window.jstiming.a={};window.jstiming.b=1;var e=function(b,a,d){var c=b.t[a],g=b.t.start;if(c&&(g||d))return c=b.t[a][0],void 0!=d?g=d:g=g[0],c-g},n=function(b,a,d){var c="";window.jstiming.pt&&(c+="&srt="+window.jstiming.pt,delete window.jstiming.pt);try{window.external&&window.external.tran?c+="&tran="+window.external.tran:window.gtbExternal&&window.gtbExternal.tran?c+="&tran="+window.gtbExternal.tran():window.chrome&&window.chrome.csi&&(c+="&tran="+window.chrome.csi().tran)}catch(g){}var f=
+window.chrome;if(f&&(f=f.loadTimes)){f().wasFetchedViaSpdy&&(c+="&p=s");if(f().wasNpnNegotiated){var c=c+"&npn=1",k=f().npnNegotiatedProtocol;k&&(c+="&npnv="+(encodeURIComponent||escape)(k))}f().wasAlternateProtocolAvailable&&(c+="&apa=1")}var l=b.t,s=l.start,f=[],k=[],h;for(h in l)if("start"!=h&&0!=h.indexOf("_")){var m=l[h][1];m?l[m]&&k.push(h+"."+e(b,h,l[m][0])):s&&f.push(h+"."+e(b,h))}delete l.start;if(a)for(var p in a)c+="&"+p+"="+a[p];(a=d)||(a="https:"==document.location.protocol?"https://csi.gstatic.com/csi":
+"http://csi.gstatic.com/csi");return[a,"?v=3","&s="+(window.jstiming.sn||"_s")+"&action=",b.name,k.length?"&it="+k.join(","):"",c,"&rt=",f.join(",")].join("")};window.jstiming.getReportUri=n;var q=function(b,a,d){b=n(b,a,d);if(!b)return"";a=new Image;var c=window.jstiming.b++;window.jstiming.a[c]=a;a.onload=a.onerror=function(){window.jstiming&&delete window.jstiming.a[c]};a.src=b;a=null;return b};window.jstiming.report=function(b,a,d){if("prerender"==document.webkitVisibilityState){var c=!1,g=function(){if(!c){a?
+a.prerender="1":a={prerender:"1"};var f;"prerender"==document.webkitVisibilityState?f=!1:(q(b,a,d),f=!0);f&&(c=!0,document.removeEventListener("webkitvisibilitychange",g,!1))}};document.addEventListener("webkitvisibilitychange",g,!1);return""}return q(b,a,d)};window.jstiming.reportDone=function(b){if(window.jstiming.b<=(b||1))return!1;for(var a in window.jstiming.a)return!1;return!0};var r=function(b,a,d,c){return 0<d?(c?b.tick(a,c,d):b.tick(a,"",d),!0):!1};window.jstiming.getNavTiming=function(b){if(window.performance&&
+window.performance.timing){var a=window.performance.timing;r(b,"_dns",a.domainLookupStart)&&r(b,"dns_",a.domainLookupEnd,"_dns");r(b,"_con",a.connectStart)&&r(b,"con_",a.connectEnd,"_con");r(b,"_req",a.requestStart)&&r(b,"req_",a.responseStart,"_req");r(b,"_rcv",a.responseStart)&&r(b,"rcv_",a.responseEnd,"_rcv");if(r(b,"_ns",a.navigationStart)){r(b,"ntsrt_",a.responseStart,"_ns");r(b,"nsfs_",a.fetchStart,"_ns");var d=window.external&&window.external.startE;!d&&(window.chrome&&window.chrome.csi)&&
+(d=Math.floor(window.chrome.csi().startE));d&&(r(b,"_se",d),r(b,"sens_",a.navigationStart,"_se"));r(b,"ntplt0_",a.loadEventStart,"_ns");r(b,"ntplt1_",a.loadEventEnd,"_ns")}}}};})()
+</script><script type="text/javascript">KX_timer.tick('tl'); if (document.location.protocol == 'https:') {window.jstiming.report(KX_timer, undefined , 'https://gg.google.com/csi');} else {window.jstiming.report(KX_timer);}</script></body></html>

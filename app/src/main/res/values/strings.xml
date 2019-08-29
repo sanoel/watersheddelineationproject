@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Watershed Delineation</string>
+    <string name="menu_settings">Settings</string>
+    <string name="delineate_button">Simulate Rainfall</string>
+    <string name="rainfall_settings_title">Rainfall Event Settings</string>
+    
+</resources>
